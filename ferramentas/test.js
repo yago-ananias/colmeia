@@ -40,17 +40,24 @@ const ok = (cond, msg) => { console.log((cond ? "  ok   " : "  FALHOU ") + msg);
   const data = await p.evaluate(() => {
     const bit = c => 1 << (c.charCodeAt(0) - 97);
     const masks = WORDS.map(w => [...w].reduce((m, c) => m | bit(c), 0));
+    const today = Math.round((new Date(new Date().getFullYear(), new Date().getMonth(), new Date().getDate()) - new Date(2026, 9, 1)) / 864e5) + 1;
     let bad = 0, min = 1e9, max = 0;
-    for (const code of PUZ) {
+    // dias que já foram ao ar ficam fixos mesmo que a lista mude: só precisam ter pangrama e pelo menos 15 palavras
+    const check = (code, strict) => {
       const M = [...code].reduce((m, c) => m | bit(c), 0), cb = bit(code[0]);
       let n = 0, pg = 0;
       masks.forEach(m => { if ((m & ~M) === 0 && (m & cb)) { n++; if (m === M) pg++; } });
-      if (new Set(code).size !== 7 || n < 22 || n > 65 || pg < 1) bad++;
-      min = Math.min(min, n); max = Math.max(max, n);
-    }
-    return { words: WORDS.length, puz: PUZ.length, bad, min, max, size: document.documentElement.outerHTML.length };
+      if (new Set(code).size !== 7 || pg < 1 || (strict ? n < 22 || n > 65 : n < 15)) bad++;
+      if (strict) { min = Math.min(min, n); max = Math.max(max, n); }
+    };
+    LIVRE.forEach(c => check(c, true)); DAYS.forEach((c, i) => check(c, i >= (today + 2) * 3));
+    const key = c => [...c].sort().join(""), ds = new Set(DAYS.map(key));
+    return { words: WORDS.length, puz: DAYS.length + LIVRE.length, days: DAYS.length / 3, livre: LIVRE.length, bad, min, max,
+      overlap: LIVRE.filter(c => ds.has(key(c))).length, pinned: DAYS.slice(3, 6).join(","), size: document.documentElement.outerHTML.length };
   });
   ok(data.bad === 0, `${data.puz} desafios, todos com 7 letras, 22–65 palavras e pangrama (min ${data.min}, max ${data.max})`);
+  ok(data.overlap === 0, `${data.days} dias de diários e ${data.livre} desafios no Livre, sem conjunto de letras em comum (spec 008)`);
+  ok(data.pinned === "obeilrs,dceiort,caeintv", "diários de 02/10/2026 continuam os mesmos (programação fixa em diarios.txt)");
   ok(data.words > 5000, `${data.words} palavras na lista`);
   ok(data.size < 1e6, `página com ${Math.round(data.size / 1024)} KB (< 1 MB)`);
   const blocked = await p.evaluate(() => ["baal", "maria", "john", "porno", "blog"].filter(w => WORDS.includes(w)));
@@ -64,7 +71,7 @@ const ok = (cond, msg) => { console.log((cond ? "  ok   " : "  FALHOU ") + msg);
   console.log("Diários (FR-002, FR-003)");
   const day = await p.evaluate(() => {
     const d = Math.round((new Date(new Date().getFullYear(), new Date().getMonth(), new Date().getDate()) - new Date(2026, 9, 1)) / 864e5) + 1;
-    const codes = [0, 1, 2].map(k => PUZ[((d - 1) * 3 + k) % PUZ.length]);
+    const codes = [0, 1, 2].map(k => DAYS[((d - 1) * 3 + k) % DAYS.length]);
     const words = codes.map(code => { const L = new Set(code); return WORDS.filter(w => w.includes(code[0]) && [...w].every(c => L.has(c))); });
     return { codes, words };
   });
@@ -169,6 +176,53 @@ const ok = (cond, msg) => { console.log((cond ? "  ok   " : "  FALHOU ") + msg);
   await p.keyboard.type(center);
   ok(await p.$eval("#toast", e => e.textContent === ""), "aviso some quando a próxima palavra começa");
   await p.keyboard.press("Backspace");
+
+  console.log("Compartilhar, Livre e sugestão (spec 008)");
+  const hiveSet = () => p.$$eval(".hex", h => h.map(x => x.dataset.l).sort().join(""));
+  const hiveCode = () => p.evaluate(() => { const c = document.querySelector(".hex.center").dataset.l;
+    return c + [...document.querySelectorAll(".hex:not(.center)")].map(x => x.dataset.l).sort().join(""); });
+  await p.evaluate(() => { window.__copied = null;
+    Object.defineProperty(navigator, "clipboard", { configurable: true, value: { writeText: t => { window.__copied = t; return Promise.resolve(); } } }); });
+  const code0 = await hiveCode();
+  await p.click("#b-share"); await p.waitForTimeout(150);
+  const shared = await p.evaluate(() => window.__copied || "");
+  ok(shared.includes("yago-ananias.github.io/colmeia/?c=" + code0) && shared.includes("Manhã"), "Compartilhar copia o resultado com link para o mesmo desafio");
+  ok([...(shared.split("\n")[1] || "")].filter(ch => ["🟨", "⬜", "🍯"].includes(ch)).length === 7, "resultado tem a grade de 7 casas do nível: " + (shared.split("\n")[1] || ""));
+  const daySets = await p.evaluate(() => DAYS.map(c => [...c].sort().join("")));
+  const isDaily = new Set(daySets);
+  await p.click("#m-livre"); await p.waitForTimeout(200);
+  const seenSets = [await hiveSet()];
+  for (let i = 0; i < 25; i++) { await p.click("#b-new"); await p.waitForTimeout(40); seenSets.push(await hiveSet()); }
+  ok(seenSets.every(s => !isDaily.has(s)), "Livre nunca sorteia as letras de um diário (26 desafios seguidos)");
+  ok(new Set(seenSets).size === seenSets.length, "Livre não repete conjunto de letras já jogado");
+  await p.goto(url + "?c=" + day.codes[1]); await p.waitForTimeout(300);
+  ok(await p.$eval("#m-diario", e => e.getAttribute("aria-pressed")) === "true" && await p.$eval("#dailies button:nth-child(2)", e => e.getAttribute("aria-pressed")) === "true",
+    "link de um desafio de hoje abre o Diário no desafio certo (Tarde)");
+  const lc = await p.evaluate(() => LIVRE[7]);
+  await p.goto(url + "?c=" + lc); await p.waitForTimeout(300);
+  ok(await p.$eval("#m-livre", e => e.getAttribute("aria-pressed")) === "true" && (await hiveCode()) === lc, "link de outro desafio abre no Livre com as mesmas letras e a mesma central");
+  await p.goto(url + "?c=" + lc + "&m=relampago&p=95"); await p.waitForTimeout(300);
+  const rl = await p.evaluate(() => ({ mode: document.getElementById("m-relampago").getAttribute("aria-pressed"),
+    sheet: !document.getElementById("overlay").hidden && document.getElementById("sheet").textContent }));
+  ok(rl.mode === "true" && !!rl.sheet && rl.sheet.includes("95 pontos") && (await hiveCode()) === lc, "link do Relâmpago abre a partida com as letras e os pontos a bater");
+  const clock0 = await p.$eval("#clock", e => e.textContent); await p.waitForTimeout(1300);
+  ok(await p.$eval("#clock", e => e.textContent) === clock0, "relógio só começa quando a janela do desafio fecha");
+  await p.goto(url + "?c=zzzzzzz"); await p.waitForTimeout(300);
+  ok(await p.$eval("#m-diario", e => e.getAttribute("aria-pressed")) === "true", "link inválido abre o jogo normalmente");
+  const cen = await p.$eval(".hex.center", e => e.dataset.l), bogus = cen.repeat(5);
+  await p.keyboard.type(bogus); await p.keyboard.press("Enter"); await p.waitForTimeout(100);
+  ok(await p.$eval("#toast .sug", e => e.textContent).catch(() => null) === "Sugerir", "palavra fora da lista mostra o botão Sugerir");
+  await p.click("#toast .sug"); await p.waitForTimeout(100);
+  const href = await p.$eval("#sheet a[data-act=suggest]", a => a.href).catch(() => "");
+  ok(href.startsWith("https://github.com/yago-ananias/colmeia/issues/new?title=") && decodeURIComponent(href).includes("Sugestão de palavra: " + bogus),
+    "Sugerir abre uma sugestão pronta no GitHub com a palavra");
+  await p.$eval("#sheet a[data-act=suggest]", a => a.addEventListener("click", e => e.preventDefault()));
+  await p.click("#sheet a[data-act=suggest]"); await p.waitForTimeout(100);
+  await p.evaluate(() => document.activeElement && document.activeElement.blur());
+  await p.keyboard.type(bogus); await p.keyboard.press("Enter"); await p.waitForTimeout(100);
+  ok(await p.$eval("#toast .sug", e => e.textContent).catch(() => null) === "Já sugerida", "a mesma palavra aparece como já sugerida");
+  await p.keyboard.type(cen + cen); await p.keyboard.press("Enter"); await p.waitForTimeout(100);
+  ok(!(await p.$("#toast .sug")), "palavra curta não mostra Sugerir");
 
   console.log("Tema (FR-004)");
   const bg = () => p.evaluate(() => getComputedStyle(document.body).backgroundColor);

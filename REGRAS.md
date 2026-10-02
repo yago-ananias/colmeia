@@ -50,13 +50,18 @@ O nível é calculado só com os pontos das palavras, como fração da pontuaç�
 
 ## Modos
 - **Diário:** três desafios por dia (Manhã, Tarde e Noite), iguais para todo mundo e liberados à meia-noite pelo horário do aparelho. Cada um guarda seu progresso.
-- **Relâmpago:** desafio sorteado com pelo menos 35 palavras. Começa com **75 segundos**. Cada acerto dá **2 segundos por letra** (no máximo 14) e o pangrama dá **12 segundos**. Pontuação = pontos das palavras + bônus de combo. O recorde fica salvo. O relógio para se você trocar de aba ou abrir qualquer janela (como a ajuda). Trocar de modo no meio da partida pede confirmação.
-- **Livre:** desafios sorteados sem limite. O botão "Novo desafio" troca de desafio.
+- **Relâmpago:** desafio sorteado (entre os do Livre) com pelo menos 35 palavras. Começa com **75 segundos**. Cada acerto dá **2 segundos por letra** (no máximo 14) e o pangrama dá **12 segundos**. Pontuação = pontos das palavras + bônus de combo. O recorde fica salvo. O relógio para se você trocar de aba ou abrir qualquer janela (como a ajuda). Trocar de modo no meio da partida pede confirmação.
+- **Livre:** desafios sorteados sem limite. Nunca usa as letras de um desafio diário (de hoje, de outro dia ou dos próximos) e não repete letras que você já jogou no Livre, até acabarem todas. O botão "Novo desafio" troca de desafio.
 
 ## Dicas
 - **Mapa de dicas** (grátis): tabela com quantas palavras faltam por letra inicial e tamanho.
 - **Revelar início de palavra:** mostra as 2 primeiras letras e o tamanho de uma palavra que falta. No Diário e no Livre são **3 por desafio**. No Relâmpago não há limite, mas cada uma custa **5 segundos** e só pode ser pedida com mais de 6 segundos no relógio.
 - **Ver respostas** (Diário e Livre): mostra todas as palavras que faltam. Depois disso o desafio não aceita mais palavras e as dicas ficam desativadas.
+
+## Compartilhar e sugerir
+- **Compartilhar** abre o menu de compartilhar do celular ou copia um resumo: nível, uma grade de 7 casas (uma por nível a partir de Larva; 🍯 na colmeia completa), ⭐ por pangrama e um link para o mesmo desafio.
+- Quem abre o link joga as mesmas letras: no Diário, se for um desafio de hoje; no Livre, se for de outro dia. No Relâmpago, o link mostra quantos pontos bater, e o relógio só começa quando a pessoa fecha o aviso.
+- **Sugerir:** quando o jogo recusa uma palavra de 4 letras ou mais com a letra central (fora da lista, plural, verbo ou pronome), aparece o botão "Sugerir". Ele abre uma sugestão pronta no GitHub do jogo (é preciso ter conta lá). Depois, a palavra aparece como "Já sugerida".
 
 ## Sequência e conquistas
 - **Dias seguidos:** o dia conta quando você acha 5 palavras em um desafio diário. Pular um dia zera a sequência.
