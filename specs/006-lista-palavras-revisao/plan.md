@@ -1,0 +1,2 @@
+# Plan: Lista de palavras revisada
+Portar para `ferramentas/build.py` os ajustes de `revisoes/lista/build_sugerido.py` mantendo o que a versão atual já tinha (`permitidas.txt`, nomes do IBGE só barram sem uso comum nos treebanks). Corrigir a blocklist (`bale` barrava *balé*, `bufe` barrava *bufê*), somar `blocklist_acrescimos.txt` e mais nomes, lugares, estrangeirismos e verbos conjugados vistos nas ~1.460 palavras novas. Copiar listas e `diagnostico.py` para `ferramentas/listas/`, chamar no `montar.sh` e no `test.js`.

@@ -1,0 +1,14 @@
+{
+  "name": "Colmeia de Palavras",
+  "short_name": "Colmeia",
+  "lang": "pt-BR",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#EDF0E8",
+  "theme_color": "#F0A531",
+  "icons": [
+    { "src": "icone-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icone-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "favicon.svg", "sizes": "any", "type": "image/svg+xml" }
+  ]
+}

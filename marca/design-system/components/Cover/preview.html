@@ -1,0 +1,53 @@
+<!-- @dsCard height=288 -->
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Colmeia</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,800&family=Atkinson+Hyperlegible:wght@400&display=swap">
+<style>
+  html, body { margin:0; height:100%; }
+  body { background:var(--bg); color:var(--ink); font-family:var(--font-body); overflow:hidden; }
+  .cover { position:relative; height:288px; width:960px; overflow:hidden; }
+  .art { position:absolute; top:0; left:480px; width:480px; height:288px; overflow:hidden; }
+  .art svg { display:block; width:480px; height:288px; }
+  .honey { fill:var(--honey); }
+  .deep { fill:var(--ink); }
+  .tint { fill:var(--plum-soft); }
+  .plum { fill:var(--plum); }
+  .blk { rx:var(--radius-xl); }
+  .pill16 { rx:var(--radius-xl); }
+  .pill12 { rx:var(--radius-lg); }
+  .cellf { fill:var(--cell); stroke:var(--cell); stroke-width:6; stroke-linejoin:round; }
+  .core { fill:var(--honey); stroke:var(--honey); stroke-width:6; stroke-linejoin:round; }
+  .cut { fill:var(--bg); stroke:var(--bg); stroke-width:4; stroke-linejoin:round; }
+  .words { position:absolute; left:var(--space-22); bottom:var(--space-22); max-width:440px; }
+  .name { margin:0; font-family:var(--font-display); font-size:104px; line-height:.92; font-weight:800; letter-spacing:-.02em; color:var(--ink); }
+  .tag { margin:var(--space-8) 0 0 4px; font-size:14px; line-height:20px; color:var(--muted); }
+</style>
+</head>
+<body>
+<div class="cover">
+<div class="art" aria-hidden="true">
+<svg viewBox="0 0 480 288" width="480" height="288">
+<!--
+  blocks      honey 160x240 slab bled off the top (the brand colour, biggest) · ink 304x208 bleeding off the right edge · plum-soft 160x32 pill under the slab · plum 64x24 pill once (action colour, small) — about 35% of 960x288
+  arrangement one tall honey slab with an ink field beside it, bottoms aligned space-22 above the edge, space-16 gutters
+  pattern     hexagonal cells, from the README: "Hexágono só no tabuleiro e na marca" — the seven-cell board (cell, honey core) set into the ink field at the game's own 7% gap, two loose cells cut out of the honey slab
+  scales      gutters space-16; bottoms space-22; corners radius-xl; pills rx radius-xl (half of 32) and radius-lg (half of 24); cell radius 34 / 22
+-->
+<rect class="honey blk" x="16" y="-16" width="160" height="240" rx="16"/>
+<rect class="tint pill16" x="16" y="234" width="160" height="32" rx="16"/>
+<rect class="deep blk" x="192" y="56" width="304" height="210" rx="16"/>
+<rect class="plum pill12" x="192" y="16" width="64" height="24" rx="12"/>
+<polygon class="cut" points="96.0,50.0 115.1,61.0 115.1,83.0 96.0,94.0 76.9,83.0 76.9,61.0"/><polygon class="cut" points="136.8,85.3 155.8,96.3 155.8,118.3 136.8,129.3 117.7,118.3 117.7,96.3"/>
+<polygon class="core" points="344.0,126.0 373.4,143.0 373.4,177.0 344.0,194.0 314.6,177.0 314.6,143.0"/><polygon class="cellf" points="312.5,71.4 341.9,88.4 341.9,122.4 312.5,139.4 283.0,122.4 283.0,88.4"/><polygon class="cellf" points="375.5,71.4 405.0,88.4 405.0,122.4 375.5,139.4 346.1,122.4 346.1,88.4"/><polygon class="cellf" points="407.0,126.0 436.5,143.0 436.5,177.0 407.0,194.0 377.6,177.0 377.6,143.0"/><polygon class="cellf" points="375.5,180.6 405.0,197.6 405.0,231.6 375.5,248.6 346.1,231.6 346.1,197.6"/><polygon class="cellf" points="312.5,180.6 341.9,197.6 341.9,231.6 312.5,248.6 283.0,231.6 283.0,197.6"/><polygon class="cellf" points="281.0,126.0 310.4,143.0 310.4,177.0 281.0,194.0 251.5,177.0 251.5,143.0"/>
+</svg>
+</div>
+<div class="words">
+<h1 class="name">Colmeia</h1>
+<p class="tag">Sete letras, uma no centro. Três desafios por dia.</p>
+</div>
+</div>
+</body>
+</html>

@@ -1,0 +1,9 @@
+# Downloads e dados intermediários do montar.sh (são baixados de novo quando faltam).
+# words.json e rejected.json ficam no repositório porque os testes usam.
+ferramentas/.cache/*
+!ferramentas/.cache/words.json
+!ferramentas/.cache/rejected.json
+_site/
+node_modules/
+__pycache__/
+.specify/feature.json

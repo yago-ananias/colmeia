@@ -1,0 +1,41 @@
+# Palavras que DEVEM valer no jogo (teste de regressão da lista).
+# Revisão de 02/10/2026. Uma ou mais por linha, com acento. Linhas com # são comentários.
+# O diagnóstico ignora as que não cabem em nenhuma colmeia (menos de 4 letras ou mais de 7 letras diferentes).
+
+# Já valiam e precisam continuar valendo
+casa mesa cadeira janela livro carro cachorro gato escola comida laranja aluno aluna leão leoa
+professora cidadã colmeia abelha rainha lápis ônibus correr cantar amor
+
+# Femininos que o lematizador confundia com verbo ("garota" → "garotar")
+garota filha esposa amiga noiva grávida ocupada
+
+# Recusadas com o motivo errado (acento igual a uma forma de verbo, ou fora do dicionário base)
+faca amanhã política última passado mente
+
+# Substantivos que no dicionário só aparecem como forma de verbo (sonho ← sonhar, erro ← errar)
+sonho erro segredo perigo destino risco domingo aeroporto bolso carteira qualidade pesquisa
+surpresa cuidado certo garfo sistema controle respeito presente motivo prova cena piada
+realidade endereço movimento inocente barulho orgulho interesse oferta artista pressa roubo
+carona contente tentativa vazio magia passeio instante folga calmo criatura sopa tesouro
+desastre fuga pulso medicina ritmo atraso retorno suco lenda capacidade profundo cargo chegada
+esquina bateria pecado progresso cinto impacto jaqueta desenho agenda aumento castigo foco
+protesto banheira perdedor gravidade raro troco luxo taxa caminhada prioridade fracasso
+profissão vendedor trono tortura parente sobrenome traje recorde colina apetite dignidade
+oposto biscoito assento torneio apelido bife derrota impulso sacola envelope desconto gripe
+susto véspera tampa boliche fardo recibo gaiola pijama barraca elenco imposto profeta vacina
+insulto captura balé lixeira atalho infinito formato postura visitante repouso limonada
+fachada exagero remorso manobra prateleira triunfo tocha novela tango tese gramado cochilo
+madrasta narrador saliva gelatina torneira aroma carpete lente tributo mascote vitamina
+tempero adaga faísca eclipse teia bactéria sirene aura alce cafeína broche relíquia jarra
+teclado sinuca estante cerâmica valsa alfabeto platina gorro seta granja verba olfato cripta
+
+# Verbos no infinitivo que faltavam
+procurar atirar sobreviver descansar relaxar apostar acalmar desaparecer retirar retornar
+comemorar despedir reconhecer reclamar atingir revelar remover recolher preencher atrair
+interferir cooperar reduzir abaixar desfazer acessar rever preferir desafiar reparar arrasar
+desmaiar anotar aguardar refazer refletir retomar reverter recorrer reviver revisar descartar
+colaborar rejeitar recriar aturar renovar alegar assaltar relembrar desarmar ajoelhar despejar
+reformar recitar reiniciar interagir
+
+# Singulares terminados em s (não são plural)
+país através atrás simples tênis vírus cais caos adeus bônus oásis

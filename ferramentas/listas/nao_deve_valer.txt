@@ -1,0 +1,39 @@
+# Palavras que NÃO devem valer no jogo (teste de regressão da lista).
+# Revisão de 02/10/2026. Uma ou mais por linha, com acento. Linhas com # são comentários.
+# O diagnóstico ignora as que não cabem em nenhuma colmeia (menos de 4 letras ou mais de 7 letras diferentes).
+
+# Países, cidades, astros e personagens
+frança alemanha itália méxico rússia europa texas boston oxford berlim veneza júpiter vênus
+drácula lutero bahia bolívia colômbia copacabana egito espanha flórida guatemala hungria
+islândia líbano malta marselha milão mongólia nigéria prússia sevilha sodoma venezuela viena
+zelândia áustria índia polônia argélia armênia austrália canadá angola chile japão nepal
+senegal sudão turquia ruanda jamaica lisboa moscou irlanda bélgica sicília ucrânia cairo miami
+genebra salomão napoleão colombo newton einstein otelo apolo minerva penélope
+
+# Nomes e sobrenomes
+adele alcide sansão sansa alves borges magalhães vidal henry jane laura amanda pedro diana
+miguel paula bruno isabel sofia marta jorge ricardo paulo manuel roberto raquel joana catarina
+camila vicente mônica cristina moana helene juanita caterina matilda sacha gael lissa petra
+nando dorcas judas golias pilatos almeida souza sousa pereira ferreira ribeiro castro vieira
+moreira medina
+
+# Estrangeirismos
+freelancer freelance caddie quiche jeans service rent double saint orange buena tengo show
+blog link mouse hobby game drive light shop soul hall live here made gone bang boom golf diet
+gear temple olive color break apart beatle blanco campbell christi conan dresden feldman hesse
+hors jumbo lahore mignon napier palo part torino strip
+
+# Plurais
+rins vagens cascavéis artefatos dejetos migalhas noturnas respeitos palmas casas laranjas anos
+coisas pessoas amigos olhos mãos flores carros livros
+
+# Verbos conjugados
+arranca apaga olha toma deve arrasta empurra pendura sossega escorrega machuca arromba chega
+chora indo chiu correu corri sabe disse pode estava fazendo falando pensei ficou morreu
+chegou falou olhe venha diga
+
+# Pronomes, preposições e conjunções
+você para isso pelo neste comigo quando porque embora
+
+# Palavrões e termos ofensivos
+putaria puteiro boiola crioulo neguinho porra caralho merda foder babaca

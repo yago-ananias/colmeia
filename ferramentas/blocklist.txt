@@ -1,0 +1,31 @@
+# Palavras removidas da lista do jogo (sem acento, uma por linha ou separadas por espaço).
+# Estrangeirismos, nomes próprios, siglas e formas raras.
+abel able acme adao aids amir argo arre baal babi babu baby back baco bang best bibi bleu blog blue bond boom brie buda bull
+caga caim caio cali chai chat chia choi cori cris dali dara deja didi diet dima dina dino dita dodo doll duda eden eita eros esto
+fido fife fifi gage gaia gear gita golf haja haji hall hari hein here homo hula iago ines inge iras ires jaco jaga japa java jinx joao john jose juan juju
+kemp kilo kung laia lala lana lear lila lili line link lino lise live lope luis lulu luna lupo lyme madi made mail maja mali manu mari maxi mija mijo mile milo milu mimi mogo mojo momo mona mori
+nani nara nega nele nene nero nilo nina nini noel noir nola nope nuno olga opal oque otis pepe peri pero pili pipi plus pool pope pras prem rafi rali rami rana rani raul rave
+saba sade sage sara sari self semi shop show siao sire siro sosa soto soul spam spin step suri tali tamo tate tava tera tita tito toto tori triz vous yang zola
+# Inglês e palavras chulas/explícitas
+beach break clear cream drive light maple mouse honor color cocoa coca focus lobby hobby login nylon prime prius quale petit grand garde noble dolce bueno modus omaha miami
+porno penis cagar cagao mijar mijao peido porre
+roma
+dalai gila irlanda padma zama diazepam graal caraca ecra
+# revisão 2026-10-02: nomes, lugares, estrangeirismos e termos ofensivos
+putaria puteiro boiola crioulo neguinho crioula neguinha
+freelancer freelance caddie quiche jeans service rent double saint orange buena tengo
+franca alemanha italia mexico russia europa texas boston oxford berlim veneza jupiter venus dracula lutero adele alcide sansao sansa
+chupa chiu
+satanas pilatos caifas golias dorcas paris habeas sapiens mortis hors motocross clips topless stress status campus cactus lotus herpes
+gauleses dejetos cannabis
+gram tutti manolo londo reno manja ronca puna
+# Acréscimos da revisão de 02/10/2026
+malta mongolia prussia sodoma india armenia canada nepal senegal jamaica sicilia otelo apolo minerva penelope
+moana helene juanita caterina matilda sacha gael lissa petra nando
+game gone temple olive beatle blanco campbell christi conan dresden feldman hesse jumbo lahore mignon napier palo torino cool
+empurra pendura sossega escorrega machuca arromba
+# Nomes, lugares, estrangeirismos, verbos conjugados e romanos que entraram com a consulta ao Hunspell (02/10/2026)
+acosta adama adela agra amane anata aninha asia astra aurore baja bali bambino banzai bora brandi brave bria bunga cable caie cape carmine carpe champa chiba chiquita chucho cindi cocona columbo core cosa cube date dede defense demarco desai embrace encode escalade esme esteva extreme fade fane fara fausta fela fine flame fortune future galra gale gave goro grasso greta guide guise hasta hola ilaria inga irena irina irisa jada jana jobe jonjo justice lalo lane lego libre lita lito liza loca lora lorque lupe lura mace macarena mada mani marga marge margo medicine minute misa mita mobile model moni mune nature nava navarra nena nica nico nita nomine opie opus pete petite pine pirate ponce pongo poque people puja punta rafa rafe rance raja reba rebel remi rice rina risa rogai rogue rojo rosco rule sana signe sima simba sinai sira sita sora taipei tama tamisa tana tanco tanja tano tata tiana tiao tila tilda timbira tina tone tono tore toro tour trance trini tula tuna tune vampire varga verna verne vesta vigo viii villa vita vogue vuno xena xvii xviii zeno zina zone
+servia siria indonesia sardenha toscana galileia havana montana pandora troia urano galia sumeria sistina
+marica escrota xota
+apena arrasa descasca desencana ecoa emana enoja entristece exala fascina irradia oscila perdura revida condiz descende aflige aflija advinha equivoquei pressenti renuncio sentencio tenciona tenciono revelo relaxe oica idolatra preza vegeta venera verte noutra encima anoite

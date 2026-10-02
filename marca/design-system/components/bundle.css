@@ -1,0 +1,97 @@
+/* Colmeia — componentes em CSS puro. Classes com prefixo cm-. Depende de tokens.css (cores, espaços, raios, fontes). */
+.cm-root{font-family:var(--font-body);font-size:15px;line-height:1.45;color:var(--ink)}
+:where(.cm-root) button{font:inherit;color:inherit;cursor:pointer}
+:where(.cm-root) button:focus-visible{outline:3px solid var(--plum);outline-offset:2px}
+
+/* Botão */
+.cm-btn{border:1px solid var(--line);background:var(--panel);padding:10px 18px;border-radius:var(--radius-pill);font-weight:700}
+.cm-btn--primary{background:var(--ink);color:var(--bg)!important;border-color:var(--ink)}
+.cm-btn--round{width:46px;padding:10px 0;font-size:1.1rem}
+.cm-btn:disabled{opacity:.45;cursor:default}
+.cm-controls{display:flex;gap:var(--space-10);flex-wrap:wrap;justify-content:center}
+
+/* Botão de ícone */
+.cm-iconbtn{border:1px solid var(--line);background:var(--panel);width:36px;height:36px;border-radius:50%;display:grid;place-items:center;font-weight:700}
+
+/* Abas de modo */
+.cm-modes{display:inline-flex;gap:var(--space-4);background:var(--panel);border:1px solid var(--line);border-radius:var(--radius-pill);padding:3px}
+.cm-modes button{border:0;background:none;padding:6px 13px;border-radius:var(--radius-pill);font-weight:700;font-size:.88rem;color:var(--muted)}
+.cm-modes button[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
+
+/* Desafios do dia */
+.cm-dailies{display:flex;gap:var(--space-6);flex-wrap:wrap;justify-content:center}
+.cm-dailies button{border:1px solid var(--line);background:var(--panel);border-radius:var(--radius-lg);padding:6px 12px;display:flex;flex-direction:column;align-items:center;line-height:1.2;min-width:92px}
+.cm-dailies button b{font-family:var(--font-display);font-size:.92rem}
+.cm-dailies button small{font-size:.72rem;color:var(--muted)}
+.cm-dailies button[aria-pressed="true"]{border-color:var(--honey);box-shadow:inset 0 0 0 1px var(--honey)}
+
+/* Favo (tabuleiro) */
+.cm-hive{position:relative;width:min(320px,82vw);aspect-ratio:314/300.8;max-width:100%}
+.cm-hexwrap{position:absolute;inset:0;filter:drop-shadow(0 2px 0 var(--line))}
+.cm-hex{position:absolute;width:31.85%;aspect-ratio:1/1.1547;border:0;padding:0;background:var(--cell);color:var(--cell-ink);clip-path:polygon(50% 0,100% 25%,100% 75%,50% 100%,0 75%,0 25%);font-family:var(--font-display);font-weight:800;font-size:clamp(1.4rem,6vw,1.9rem);text-transform:uppercase;transition:transform .15s,background .15s;display:grid;place-items:center}
+.cm-hex:active{transform:scale(.9)}
+.cm-hex--center{background:var(--honey);color:var(--honey-ink)}
+
+/* Entrada */
+.cm-entry{font-family:var(--font-display);font-weight:700;font-size:2rem;letter-spacing:.04em;min-height:48px;display:flex;align-items:center;justify-content:center;text-transform:uppercase;max-width:100%;overflow:hidden}
+.cm-entry .c{color:var(--honey-text)}
+.cm-entry .x{color:var(--muted)}
+.cm-entry .caret{width:2px;height:32px;background:var(--plum);margin-left:2px;animation:cm-blink 1s steps(1) infinite}
+
+/* Cartão */
+.cm-card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius-xl);padding:var(--space-14) var(--space-16)}
+.cm-card h2{font-family:var(--font-display);font-size:1rem;margin:0;font-weight:700}
+.cm-sub{font-size:.82rem;color:var(--muted);margin-top:4px}
+
+/* Barra de níveis */
+.cm-rankrow{display:flex;align-items:baseline;justify-content:space-between;gap:var(--space-8)}
+.cm-rankname{font-family:var(--font-display);font-weight:800;font-size:1.3rem}
+.cm-pts{font-variant-numeric:tabular-nums;color:var(--muted);font-size:.9rem}
+.cm-pts b{color:var(--ink);font-size:1.15rem}
+.cm-track{position:relative;height:26px;margin-top:10px}
+.cm-track::before{content:"";position:absolute;left:0;right:0;top:12px;height:2px;background:var(--line)}
+.cm-fill{position:absolute;left:0;top:11px;height:4px;background:var(--honey);border-radius:2px;transition:width .5s}
+.cm-dot{position:absolute;top:8px;width:10px;height:10px;margin-left:-5px;border-radius:50%;background:var(--line)}
+.cm-dot--on{background:var(--honey)}
+.cm-dot--cur{width:24px;height:24px;top:1px;margin-left:-12px;background:var(--honey);color:var(--honey-ink);font-size:.7rem;font-weight:700;display:grid;place-items:center;font-variant-numeric:tabular-nums}
+
+/* Combo */
+.cm-combo{display:inline-flex;align-items:center;gap:var(--space-8);padding:4px 12px 4px 4px;border-radius:var(--radius-pill);background:var(--plum-soft);color:var(--plum);font-weight:700;font-size:.85rem;opacity:.45;transition:opacity .2s}
+.cm-combo--live{opacity:1}
+.cm-combo .ring{width:26px;height:26px;border-radius:50%;background:conic-gradient(var(--plum) calc(var(--p,0)*1turn),transparent 0);position:relative}
+.cm-combo .ring::after{content:attr(data-x);position:absolute;inset:3px;border-radius:50%;background:var(--plum-soft);display:grid;place-items:center;font-size:.72rem}
+
+/* Cronômetro (Relâmpago) */
+.cm-timer{flex:1;height:10px;border-radius:5px;background:var(--line);overflow:hidden}
+.cm-timer span{display:block;height:100%;background:var(--plum)}
+.cm-timer--low span{background:var(--bad)}
+.cm-clock{font-family:var(--font-display);font-weight:800;font-variant-numeric:tabular-nums;font-size:1.25rem;min-width:3.2ch;text-align:right}
+
+/* Aviso */
+.cm-toast{padding:4px 12px;border-radius:var(--radius-md);background:var(--ink);color:var(--bg);font-weight:700;font-size:.9rem;display:inline-block}
+.cm-toast--big{background:var(--honey);color:var(--honey-ink);font-family:var(--font-display);font-size:1.05rem;letter-spacing:.04em}
+
+/* Lista de palavras */
+.cm-words{list-style:none;padding:0;margin:10px 0 0;columns:2;column-gap:18px}
+.cm-words li{padding:3px 0;border-bottom:1px solid var(--line);break-inside:avoid;text-transform:capitalize;display:flex;justify-content:space-between;gap:6px}
+.cm-words li small{color:var(--muted);font-variant-numeric:tabular-nums}
+.cm-words li.pg{font-weight:700;color:var(--plum)}
+.cm-words li.miss{color:var(--muted);font-style:italic}
+
+/* Dicas */
+.cm-clues{display:flex;flex-wrap:wrap;gap:var(--space-6)}
+.cm-clues span{font-family:var(--font-display);font-weight:700;letter-spacing:.12em;background:var(--plum-soft);color:var(--plum);padding:3px 9px;border-radius:var(--radius-sm);text-transform:uppercase}
+.cm-clues span.done{text-decoration:line-through;opacity:.55}
+
+/* Selo */
+.cm-badges{display:flex;flex-wrap:wrap;gap:var(--space-6)}
+.cm-badge{font-size:.78rem;padding:3px 9px;border-radius:var(--radius-pill);border:1px dashed var(--line);color:var(--muted)}
+.cm-badge--got{border-style:solid;border-color:var(--honey);color:var(--ink);background:color-mix(in srgb,var(--honey) 18%,transparent)}
+
+/* Folha (janela) */
+.cm-sheet{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius-2xl);box-shadow:var(--shadow-sheet);padding:var(--space-22);max-width:440px;width:100%}
+.cm-sheet h2{font-family:var(--font-display);font-weight:800;font-size:1.5rem;margin:0 0 8px;text-wrap:balance}
+.cm-big-num{font-family:var(--font-display);font-weight:800;font-size:3rem;line-height:1;font-variant-numeric:tabular-nums}
+
+@keyframes cm-blink{50%{opacity:0}}
+@media (prefers-reduced-motion:reduce){.cm-root *,.cm-root *::before,.cm-root *::after{animation:none!important;transition:none!important}}
