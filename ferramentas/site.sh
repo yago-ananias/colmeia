@@ -16,7 +16,8 @@ cat <<'HEAD'
 <meta name="theme-color" content="#16151E" media="(prefers-color-scheme: dark)">
 <meta property="og:title" content="Colmeia de Palavras">
 <meta property="og:description" content="Forme palavras com 7 letras, sempre usando a do centro. Três desafios por dia.">
-<meta property="og:image" content="icone-512.png">
+<meta property="og:url" content="https://yago-ananias.github.io/colmeia/">
+<meta property="og:image" content="https://yago-ananias.github.io/colmeia/icone-512.png">
 <link rel="icon" href="favicon.ico" sizes="32x32">
 <link rel="icon" href="favicon.svg" type="image/svg+xml" media="(prefers-color-scheme: light)">
 <link rel="icon" href="favicon-escuro.svg" type="image/svg+xml" media="(prefers-color-scheme: dark)">
