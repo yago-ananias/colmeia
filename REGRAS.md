@@ -63,4 +63,4 @@ O nível é calculado só com os pontos das palavras, como fração da pontuaç�
 - **Conquistas:** Primeiro pangrama, Combo x5, Virou Rainha, 100 pts no Relâmpago, 3 dias seguidos, Guardiã sem dicas (chegar a Guardiã sem dicas e sem ver respostas) e Colmeia completa.
 
 ## Controles
-Toque ou clique nas letras, ou use o teclado: letras digitam, **Enter** envia, **Backspace** apaga, **espaço** embaralha.
+Toque ou clique nas letras, ou use o teclado: letras digitam, **Enter** envia, **Backspace** apaga, **espaço** embaralha. Com **Tab** dá para chegar a qualquer botão (inclusive as letras), e Enter ou espaço acionam o botão que está com o foco.

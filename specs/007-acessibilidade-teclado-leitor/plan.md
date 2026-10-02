@@ -1,0 +1,2 @@
+# Plan: Acessibilidade (teclado e leitor de tela)
+Tudo em `template.html`. Atalho global ignora Enter/Espaço quando o alvo é um botão com `:focus-visible` (clique de mouse seguido de Enter continua enviando). Janela: `.app.inert` + `lastFocus`. Foco nas letras sem depender de `outline` (cortado pelo `clip-path`). `#entry` vira `aria-hidden` e `#entrysr` (classe `.sr`) anuncia. `toast(msg,big,word)` monta o texto 30 ms depois de limpar e põe a palavra num `b.sr`; animação termina em opacidade .7; `clearToast()` ao começar nova palavra.

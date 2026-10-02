@@ -102,8 +102,9 @@ const ok = (cond, msg) => { console.log((cond ? "  ok   " : "  FALHOU ") + msg);
     if (!rules[t]) continue;
     const n0 = await found();
     await p.keyboard.type(rules[t]); await p.keyboard.press("Enter");
-    const shown = await p.$eval("#toast", e => e.textContent);
-    await p.waitForTimeout(450);
+    await p.waitForTimeout(80);
+    const shown = await p.$eval("#toast span", e => e.textContent);
+    await p.waitForTimeout(400);
     ok((await found()) === n0 && shown === msg, `"${rules[t]}" recusada com "${msg}"`);
   }
   const w8 = day.words[0].find(w => w.length >= 8 && new Set(w).size < 7);
@@ -135,6 +136,39 @@ const ok = (cond, msg) => { console.log((cond ? "  ok   " : "  FALHOU ") + msg);
   ok((await found()) === nManha, "voltar para Manhã mantém o progresso");
   await p.reload(); await p.waitForTimeout(300);
   ok((await found()) === nManha, "progresso recuperado ao recarregar (SC-005)");
+
+  console.log("Acessibilidade (spec 007)");
+  ok(await p.evaluate(() => document.documentElement.lang) === "pt-BR", "página declara idioma pt-BR");
+  await p.keyboard.press("Tab"); await p.focus("#m-livre"); await p.keyboard.press("Enter"); await p.waitForTimeout(250);
+  ok(await p.$eval("#m-livre", e => e.getAttribute("aria-pressed")) === "true", "Enter com foco de teclado em Livre troca de modo");
+  await p.focus("#m-diario"); await p.keyboard.press(" "); await p.waitForTimeout(250);
+  ok(await p.$eval("#m-diario", e => e.getAttribute("aria-pressed")) === "true", "Espaço com foco de teclado em Diário troca de modo");
+  await p.focus("#b-help"); await p.keyboard.press("Enter"); await p.waitForTimeout(150);
+  const dlg = await p.evaluate(() => ({ open: !document.getElementById("overlay").hidden, inert: document.querySelector(".app").inert,
+    name: (document.getElementById(document.getElementById("sheet").getAttribute("aria-labelledby")) || {}).textContent,
+    inside: document.getElementById("sheet").contains(document.activeElement) }));
+  ok(dlg.open && dlg.inert && dlg.inside, "ajuda abre pelo teclado, foco fica dentro e o jogo por trás fica inerte");
+  ok(dlg.name === "Como jogar", `janela tem nome ("${dlg.name}")`);
+  for (let i = 0; i < 6; i++) await p.keyboard.press("Tab");
+  ok(await p.evaluate(() => document.getElementById("sheet").contains(document.activeElement) || document.activeElement === document.body), "Tab não sai da janela para o jogo");
+  await p.keyboard.press("Escape"); await p.waitForTimeout(100);
+  ok(await p.evaluate(() => document.activeElement.id === "b-help" && !document.querySelector(".app").inert), "fechar devolve o foco para o botão de ajuda");
+  await p.focus(".hex.center"); await p.waitForTimeout(250);
+  const ring = await p.$eval(".hex.center", e => getComputedStyle(e).backgroundColor);
+  const plum = await p.evaluate(() => { const d = document.createElement("div"); d.style.color = "var(--plum)"; document.body.appendChild(d); const c = getComputedStyle(d).color; d.remove(); return c; });
+  ok(ring === plum, "letra com foco de teclado muda de cor (foco visível)");
+  await p.keyboard.press("Enter"); await p.waitForTimeout(80);
+  const center = await p.$eval(".hex.center", e => e.dataset.l);
+  ok(await p.$eval("#entrysr", e => e.textContent) === "Palavra: " + center.toUpperCase(), "Enter na letra com foco digita a letra e a palavra é anunciada");
+  await p.keyboard.press("Backspace"); await p.click("#b-del", { force: true });
+  await p.evaluate(() => document.activeElement.blur());
+  await p.keyboard.type(center.repeat(2)); await p.keyboard.press("Enter"); await p.waitForTimeout(80);
+  ok(await p.$eval("#toast", e => e.textContent) === (center + center).toUpperCase() + ": Muito curta", "aviso diz qual palavra foi recusada");
+  await p.waitForTimeout(2000);
+  ok(await p.$eval("#toast span", e => +getComputedStyle(e).opacity >= 0.6), "aviso continua visível depois de 2 segundos");
+  await p.keyboard.type(center);
+  ok(await p.$eval("#toast", e => e.textContent === ""), "aviso some quando a próxima palavra começa");
+  await p.keyboard.press("Backspace");
 
   console.log("Tema (FR-004)");
   const bg = () => p.evaluate(() => getComputedStyle(document.body).backgroundColor);
