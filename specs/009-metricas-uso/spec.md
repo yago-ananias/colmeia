@@ -14,6 +14,9 @@ No mesmo painel, YAGO vê quantas partidas começam em cada modo (Diário Manhã
 ## User Story 3 - Saber se o site carrega rápido (P2)
 O painel mostra o tempo de carregamento da página.
 
+## User Story 4 - Ver tudo no projeto (P1)
+YAGO (2026-10-03): "tenho que montar isso lá no umami? queria ver tudo por aqui". O painel fica no próprio projeto, pronto, sem montar relatórios no Umami.
+
 ## Requirements
 - **FR-001**: Ferramenta: Umami Cloud (plano Hobby, grátis: 100 mil eventos por mês, 6 meses de histórico). Não usa cookies nem guarda IP; respeita "Não rastrear" do navegador. Sem dado pessoal, não precisa de aviso de cookies (LGPD).
 - **FR-002**: O script de medição entra só na versão do site (`ferramentas/site.sh`), e só quando o ID do site estiver preenchido. O Artifact e o `colmeia.html` não fazem nenhuma chamada externa nova.
@@ -27,6 +30,9 @@ O painel mostra o tempo de carregamento da página.
   - `compartilhar` {modo, via: menu|copia|janela}; `sugestao` {motivo}
   - `carregamento` {ms (arredondado a 100), tema: claro|escuro}
 - **FR-005**: Nenhum evento por palavra digitada, para caber no plano grátis.
+
+- **FR-006**: `ferramentas/metricas.mjs` roda a cada hora no GitHub Actions (`.github/workflows/metricas.yml`, só no repositório), lê o Umami pelo link de compartilhamento e grava os totais em `metricas.json` na branch `metricas` (sempre um único commit). São só totais, sem dado pessoal.
+- **FR-007**: O painel é um Artifact ("Painel da Colmeia") que lê esse arquivo pelo conector Firecrawl de quem abre (o Artifact não pode buscar endereços externos por conta própria). Mostra: pessoas, visitas, partidas e tempo por visita (Hoje, 7 dias, 30 dias), visitas por dia, partidas por modo e desafio, níveis alcançados, pangramas, colmeias completas, dicas, desistências, compartilhamentos, sugestões, Relâmpago, origem, aparelho, país, velocidade e tema.
 
 ## Success Criteria
 - **SC-001**: `test.js` confere que, com o script presente, os eventos saem com as propriedades certas; e que, sem ele, nada é enviado e não há erro.

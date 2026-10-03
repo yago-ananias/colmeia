@@ -1,0 +1,36 @@
+name: Coletar métricas
+
+# A cada hora lê os números do Umami (link de compartilhamento) e grava metricas.json
+# na branch "metricas". O painel da Colmeia no projeto lê esse arquivo. Spec 009.
+on:
+  schedule:
+    - cron: "17 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: metricas
+  cancel-in-progress: true
+
+jobs:
+  coletar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Ler o Umami
+        env:
+          UMAMI_SHARE: ${{ secrets.UMAMI_SHARE || 'https://cloud.umami.is/share/G9KqGRvAWs7xISod' }}
+        run: node ferramentas/metricas.mjs /tmp/metricas.json
+      - name: Gravar na branch metricas
+        run: |
+          cd "$(mktemp -d)"
+          git init -q -b metricas
+          cp /tmp/metricas.json .
+          git add metricas.json
+          git -c user.name="github-actions[bot]" -c user.email="41898282+github-actions[bot]@users.noreply.github.com" commit -q -m "Métricas $(date -u +%FT%TZ)"
+          git push -q -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" metricas

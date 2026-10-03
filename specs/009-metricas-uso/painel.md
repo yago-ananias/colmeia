@@ -1,5 +1,10 @@
 # Painel de uso da Colmeia (Umami)
 
+## Painel no projeto (o principal)
+O Artifact "Painel da Colmeia" mostra tudo sem precisar abrir o Umami. Ele lê `metricas.json` da branch `metricas` do repositório, que o GitHub Actions (`.github/workflows/metricas.yml` + `ferramentas/metricas.mjs`) atualiza a cada hora pelo link de compartilhamento do Umami. O painel busca o arquivo pelo conector Firecrawl de quem abre.
+- Para trocar o link de compartilhamento sem deixá-lo no código: crie o segredo `UMAMI_SHARE` no repositório (Settings → Secrets and variables → Actions); ele tem prioridade.
+- Repositório público sem nenhum commit por 60 dias faz o GitHub pausar as tarefas agendadas; aí é só reativar em Actions → Coletar métricas.
+
 ## Ligar (uma vez, YAGO)
 1. Criar conta grátis em https://cloud.umami.is/signup (plano Hobby: 100 mil eventos/mês, 6 meses de histórico).
 2. Settings → Websites → Add website: nome `Colmeia`, domínio `yago-ananias.github.io`.

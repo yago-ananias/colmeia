@@ -7,3 +7,6 @@
 - [X] T005 `site.sh` injeta o script quando `UMAMI_ID` está preenchido
 - [X] T006 REGRAS.md e guia do painel
 - [X] T007 YAGO cria a conta e o site no Umami e manda o ID; preencher `UMAMI_ID` e enviar
+- [X] T008 [US4] Coletor `ferramentas/metricas.mjs` + workflow `metricas.yml` (testado com um Umami falso local)
+- [X] T009 [US4] Painel em Artifact, nos dois temas e no celular
+- [X] T010 [US4] YAGO liga o link de compartilhamento no Umami; enviar o coletor e rodar a primeira coleta
