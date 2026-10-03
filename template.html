@@ -239,13 +239,60 @@ canvas#fx{position:fixed;inset:0;pointer-events:none;z-index:30;width:100%;heigh
 <canvas id="fx" aria-hidden="true"></canvas>
 
 <script>
+/* ---------- erros (spec 010): só no site, antes do código do jogo, para ver até erro de sintaxe ou ao abrir ---------- */
+(function(){
+"use strict";
+if(!document.querySelector("script[data-website-id]"))return;
+var PAGE=location.href.split(/[?#]/)[0], CAP=3, sent=0, seen={}, Q=[], busy=false, retry=0, tries=0;
+var C=window.COLMEIA_ERRO={fase:"inicio",modo:"-",avisar:avisar};
+function limpa(s){return String(s==null?"":s).split("\n")[0]
+  .replace(/^Uncaught\s+/,"")
+  .replace(/(["'`“”‘’])[^"'`“”‘’]*\1/g,"$1…$1")
+  .replace(/\b[a-z][\w+.-]*:\/\/[^\s'"`)]*/gi,"<url>")
+  .replace(/\S+@\S+\.\S+/g,"<email>").replace(/\d{5,}/g,"<n>")
+  .replace(/\s+/g," ").trim().slice(0,120)}
+function quadro(st){var ls=String(st||"").split("\n"),pos="",fn="";
+  for(var i=0;i<ls.length&&!(pos&&fn);i++){var l=ls[i];if(l.indexOf(PAGE)<0)continue;
+    var m=/:(\d+):(\d+)\)?\s*$/.exec(l);if(!m)continue;
+    if(!pos)pos=m[1]+":"+m[2];
+    var f=/^\s*at\s+(?:async\s+)?([^\s(]+)\s+\(/.exec(l)||/^\s*([^@\s]+)@/.exec(l);
+    var nm=f?f[1].replace(/^.*\./,""):"";if(nm&&!/[<>]|^(global|eval|module) code$/.test(nm))fn=nm}
+  return pos?(fn||"anônima").slice(0,40)+"@"+pos:""}
+function envia(){try{if(!window.umami||typeof window.umami.track!=="function")return false;
+  while(Q.length){var r=window.umami.track("erro",Q.shift());if(r&&typeof r.catch==="function")r.catch(function(){})}}catch(e){Q.length=0}return true}
+function agenda(){if(retry||!Q.length)return;retry=setInterval(function(){if(envia()||++tries>=20){clearInterval(retry);retry=0}},1000)}
+function avisar(tipo,nome,msg,onde){
+  if(busy||sent>=CAP)return;busy=true;
+  try{var k=tipo+"|"+nome+"|"+msg+"|"+onde;if(seen[k])return;seen[k]=1;
+    try{var hoje=new Date().toDateString(),v=JSON.parse(localStorage.getItem("colmeia:erros")||"{}");
+      if(v.d!==hoje)v={d:hoje,n:0};if(v.n>=10)return;v.n++;localStorage.setItem("colmeia:erros",JSON.stringify(v))}catch(e){}
+    sent++;
+    Q.push({tipo:tipo,erro:(nome+": "+msg+(onde?" @ "+onde:"")).slice(0,200),fase:C.fase,modo:C.modo});
+    if(!envia())agenda()}catch(e){}finally{busy=false}}
+addEventListener("error",function(e){try{
+  var f=String(e.filename||"").split(/[?#]/)[0], x=e.error;
+  if(f!==PAGE||!e.lineno)return;
+  if(x&&x.stack&&/-extension:\/\//.test(x.stack))return;
+  var nome=(x&&x.name)||((/^(?:Uncaught\s+)?([A-Z]\w*(?:Error|Exception))\b/.exec(e.message||"")||[])[1])||"Erro";
+  var msg=x&&typeof x.message==="string"?x.message:String(e.message||"").replace(/^(?:Uncaught\s+)?[A-Z]\w*:\s*/,"");
+  avisar("erro",nome,limpa(msg),quadro(x&&x.stack)||("@"+e.lineno+":"+e.colno));
+}catch(_){}});
+addEventListener("unhandledrejection",function(e){try{
+  var r=e.reason, st=r&&r.stack;
+  if(!st||String(st).indexOf(PAGE)<0||/-extension:\/\//.test(st))return;
+  avisar("promessa",r.name||"Erro",limpa(r.message),quadro(st));
+}catch(_){}});
+})();
+</script>
+<script>
 document.documentElement.lang="pt-BR";
 /*__DATA__*/
 (function(){
 "use strict";
 const $=id=>document.getElementById(id);
-const store={get(k,d){try{const v=localStorage.getItem("colmeia:"+k);return v?JSON.parse(v):d}catch(e){return d}},
-  set(k,v){try{localStorage.setItem("colmeia:"+k,JSON.stringify(v))}catch(e){}}};
+function falhaStore(op,e){const C=window.COLMEIA_ERRO;if(C)C.avisar("armazenamento",(e&&e.name)||"Erro",op,"")}   // só o nome: a mensagem pode citar o que estava salvo
+const store={get(k,d){try{const v=localStorage.getItem("colmeia:"+k);return v?JSON.parse(v):d}catch(e){falhaStore("ler",e);return d}},
+  set(k,v){try{localStorage.setItem("colmeia:"+k,JSON.stringify(v))}catch(e){falhaStore("salvar",e)}}};
 const A=97, bit=c=>1<<(c.charCodeAt(0)-A);
 const MASK=WORDS.map(w=>{let m=0;for(const c of w)m|=bit(c);return m});
 const norm=s=>s.normalize("NFD").replace(/[̀-ͯ]/g,"").toLowerCase();
@@ -291,7 +338,7 @@ function start(mode,opts={}){
   else{code=opts.code||pickRich()}
   P=buildPuzzle(code);
   S=Object.assign({mode,day:S.day,k:S.k,input:"",found:[],bonus:0,combo:0,last:0,clues:[],hintsUsed:0,gaveUp:false,outer:shuffle(P.outer.slice())},saved||{});
-  S.mode=mode;S.input="";S.combo=0;S.last=0;S.outer=shuffle(P.outer.slice());
+  S.mode=mode;if(window.COLMEIA_ERRO)COLMEIA_ERRO.modo=modeName();S.input="";S.combo=0;S.last=0;S.outer=shuffle(P.outer.slice());
   if(mode==="relampago"){S.time=75;S.total=75;S.over=false;$("timer").hidden=false;$("clock").hidden=false;
     timerId=setInterval(tick,250);S.t0=performance.now()}
   else{$("timer").hidden=true;$("clock").hidden=true}
@@ -563,11 +610,11 @@ function fromLink(){
 /* ---------- sound + fx ---------- */
 function sfx(kind){
   if(!sound)return;
-  try{audio=audio||new (window.AudioContext||window.webkitAudioContext)();}catch(e){return}
+  try{audio=audio||new (window.AudioContext||window.webkitAudioContext)();
   const notes={tap:[[660,.04]],good:[[523,.08],[784,.12]],bad:[[220,.15]],pang:[[523,.1],[659,.1],[784,.1],[1047,.25]],end:[[392,.15],[330,.25]]}[kind]||[];
   let t=audio.currentTime;
   notes.forEach(([f,d])=>{const o=audio.createOscillator(),g=audio.createGain();o.type=kind==="bad"?"sawtooth":"triangle";o.frequency.value=f;
-    g.gain.setValueAtTime(kind==="tap"?.04:.09,t);g.gain.exponentialRampToValueAtTime(.0001,t+d);o.connect(g).connect(audio.destination);o.start(t);o.stop(t+d);t+=d*.8});
+    g.gain.setValueAtTime(kind==="tap"?.04:.09,t);g.gain.exponentialRampToValueAtTime(.0001,t+d);o.connect(g).connect(audio.destination);o.start(t);o.stop(t+d);t+=d*.8})}catch(e){}   // som é enfeite: navegador antigo sem connect() encadeado não pode travar a jogada
 }
 function confetti(){
   if(matchMedia("(prefers-reduced-motion: reduce)").matches)return;
@@ -611,14 +658,15 @@ $("overlay").addEventListener("click",e=>{
   else if(act==="reveal"){S.gaveUp=true;persist();renderAll();track("desistiu",{modo:modeName(),palavras:S.found.length})}
   else if(act==="suggest"){track("sugestao",{motivo:e.target.dataset.r||"-"});const v=store.get("sugeridas",[]),w=e.target.dataset.w;if(!v.includes(w)){v.push(w);store.set("sugeridas",v.slice(-200))}toast("Obrigado pela sugestão!")}
 });
+function focoTeclado(el){try{return el.matches(":focus-visible")}catch(e){return true}}   // navegador sem :focus-visible: deixa o navegador acionar o botão
 document.addEventListener("keydown",e=>{
   if(e.ctrlKey||e.metaKey||e.altKey)return;
   if(!$("overlay").hidden){if(e.key==="Escape"&&!(S.mode==="relampago"&&S.over))closeSheet();return}
-  if((e.key==="Enter"||e.key===" ")&&e.target.closest&&e.target.closest("button,a,input,select,textarea")&&e.target.matches(":focus-visible"))return;   // botão com foco de teclado: o navegador aciona
+  if((e.key==="Enter"||e.key===" ")&&e.target.closest&&e.target.closest("button,a,input,select,textarea")&&focoTeclado(e.target))return;   // botão com foco de teclado: o navegador aciona
   if(e.key==="Enter"){e.preventDefault();submit()}
   else if(e.key==="Backspace"){e.preventDefault();del()}
   else if(e.key===" "){e.preventDefault();doShuffle()}
-  else if(e.key.length===1){const c=norm(e.key);if(/^[a-z]$/.test(c))addLetter(c)}
+  else if((e.key||"").length===1){const c=norm(e.key);if(/^[a-z]$/.test(c))addLetter(c)}
 });
 setInterval(()=>{if(S.mode!=="relampago")renderCombo()},200);
 function checkNewDay(){if(S.mode==="diario"&&dayNumber()!==S.day){start("diario",{k:0});toast("Chegaram os desafios de hoje",true)}}
@@ -632,5 +680,6 @@ function trackLoad(){const nav=performance.getEntriesByType&&performance.getEntr
   track("carregamento",{ms:Math.round(ms/100)*100,tema:dark?"escuro":"claro"})}
 if(TRACK){addEventListener("load",()=>setTimeout(()=>{flushTrack();trackLoad()},0));let tries=0;const iv=setInterval(()=>{flushTrack();if(++tries>20||!TQ.length&&window.umami)clearInterval(iv)},500)}
 if(!store.get("seenHelp",false)){store.set("seenHelp",true);help()}
+if(window.COLMEIA_ERRO)COLMEIA_ERRO.fase="jogo";
 })();
 </script>

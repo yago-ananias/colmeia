@@ -74,3 +74,10 @@ Toque ou clique nas letras, ou use o teclado: letras digitam, **Enter** envia, *
 - Só no site (https://yago-ananias.github.io/colmeia/), com o Umami: sem cookies, sem guardar IP e respeitando "Não rastrear" do navegador. O Artifact não mede nada.
 - Conta visitas, de onde vêm e o aparelho, mais estes eventos do jogo: `partida` (modo, desafio, se veio de link, se retomou), `nivel`, `pangrama`, `completa`, `relampago-fim` (pontos), `dica`, `desistiu`, `compartilhar`, `sugestao` e `carregamento` (tempo de carregamento e tema).
 - Nenhuma palavra digitada é enviada. Se o script for bloqueado, o jogo funciona igual.
+
+## Monitoramento de erros (spec 010)
+- Só no site. Se o jogo dá erro no navegador de alguém, vai um evento `erro` no Umami: tipo (erro, promessa ou armazenamento), a mensagem limpa com a função e a linha, se foi ao abrir ou jogando, e o modo.
+- Nunca vai endereço da página, texto entre aspas, link, e-mail, número longo nem palavra digitada. Cada erro vai uma vez por carregamento; no máximo 3 por carregamento e 10 por aparelho por dia.
+- Erros de extensões do navegador e de scripts de fora são ignorados.
+- Todo dia (07:41 de Brasília) um robô joga no site: ajuda, colmeia, desafios do dia, palavra aceita e recusada, tema, Relâmpago, ícones, tempo de carga e erros. Não conta visita no Umami. Se falhar, abre uma issue "Site com problema (verificação diária)" no repositório; quando volta, ela é fechada. A mesma verificação roda no site montado antes de cada publicação.
+- O painel mostra a saúde no cartão "Saúde do jogo": site agora (checado a cada hora), última verificação diária e erros dos jogadores.

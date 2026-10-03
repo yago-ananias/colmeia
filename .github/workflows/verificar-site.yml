@@ -1,0 +1,68 @@
+name: Verificar o site
+
+# Uma vez por dia abre https://yago-ananias.github.io/colmeia/ como um jogador (Chromium sem tela) e confere se o jogo
+# funciona: página no ar, ajuda, colmeia, desafios do dia, palavra aceita, tema, Relâmpago, ícones, tempo e erros de script.
+# Não conta visita nem gasta evento no Umami: ferramentas/verificar-site.mjs troca o script do Umami por um de mentira.
+# Se falhar, abre (ou comenta) a issue "Site com problema (verificação diária)"; quando volta a passar, fecha a issue.
+# O coletor de métricas (metricas.yml) lê o resultado da última execução e o painel mostra.
+on:
+  schedule:
+    - cron: "41 10 * * *"   # 07:41 em Brasília: longe da virada do dia do jogo (00:00) e fora do minuto 0
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: verificar-site
+  cancel-in-progress: false
+
+jobs:
+  verificar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      SITE_URL: https://yago-ananias.github.io/colmeia/
+      AVISO: Site com problema (verificação diária)
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Instalar Chromium
+        run: npm install --no-save playwright && npx playwright install --with-deps chromium
+      - name: Abrir o site como um jogador
+        run: node ferramentas/verificar-site.mjs "$SITE_URL" verificacao.json
+      - name: Guardar o resumo
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: verificacao
+          path: verificacao.json
+          retention-days: 14
+          if-no-files-found: ignore
+      - name: Avisar numa issue
+        if: failure()
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          DONO: ${{ github.repository_owner }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          falhas=$(node -e 'const j=JSON.parse(require("fs").readFileSync("verificacao.json","utf8"));console.log(j.checks.filter(c=>!c.ok).map(c=>"- **"+c.nome+"**: "+c.detalhe).join("\n"))' 2>/dev/null) || falhas="- A verificação não chegou ao fim (veja o registro)."
+          quando=$(TZ=America/Sao_Paulo date '+%d/%m às %H:%M')
+          corpo=$(printf '@%s a verificação de %s encontrou problema em %s\n\n%s\n\nRegistro completo: %s\n' "$DONO" "$quando" "$SITE_URL" "$falhas" "$RUN_URL")
+          n=$(gh issue list --state open -L 300 --json number,title --jq ".[] | select(.title == \"$AVISO\") | .number" | head -n1)
+          if [ -n "$n" ]; then gh issue comment "$n" --body "$corpo"; else gh issue create --title "$AVISO" --body "$corpo"; fi
+      - name: Fechar a issue quando o site volta
+        if: success()
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          n=$(gh issue list --state open -L 300 --json number,title --jq ".[] | select(.title == \"$AVISO\") | .number" | head -n1)
+          if [ -n "$n" ]; then gh issue close "$n" --comment "Voltou a funcionar na verificação de $(TZ=America/Sao_Paulo date '+%d/%m às %H:%M')."; fi
+

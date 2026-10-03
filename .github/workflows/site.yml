@@ -29,6 +29,11 @@ jobs:
         run: node ferramentas/test.js
       - name: Montar o site
         run: sh ferramentas/site.sh
+      - name: Verificar o site montado como um jogador
+        run: |
+          (python3 -m http.server 8080 -d _site >/dev/null 2>&1 &)
+          sleep 1
+          PAUSA_MS=1000 node ferramentas/verificar-site.mjs http://127.0.0.1:8080/ /tmp/verificacao.json
       - uses: actions/upload-pages-artifact@v3
         with:
           path: _site

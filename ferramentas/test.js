@@ -295,6 +295,7 @@ const ok = (cond, msg) => { console.log((cond ? "  ok   " : "  FALHOU ") + msg);
     const merr = []; m.on("pageerror", e => merr.push(e.message));
     await m.route(/fonts\.(googleapis|gstatic)\.com/, r => r.abort());
     await m.goto("file://" + siteFile); await m.waitForTimeout(400); await m.keyboard.press("Escape");
+    await m.evaluate(() => document.activeElement && document.activeElement.blur());   // o foco volta para um botão ao fechar a ajuda; Enter nele não envia a palavra
     const ev = () => m.evaluate(() => window.__ev.map(([n, d]) => n + JSON.stringify(d)));
     let e = await ev();
     ok(e.some(x => x.startsWith('partida{"modo":"Diário","desafio":"Manhã","origem":"normal"')), "partida no Diário é registrada com modo e desafio");
@@ -311,6 +312,7 @@ const ok = (cond, msg) => { console.log((cond ? "  ok   " : "  FALHOU ") + msg);
     ok(e.includes('dica{"modo":"Diário"}') && e.includes('compartilhar{"modo":"Diário","via":"copia"}'), "dica e compartilhamento são registrados");
     ok(e.some(x => x.startsWith('partida{"modo":"Relâmpago"')), "partida no Relâmpago é registrada");
     ok(e.every(x => !x.includes(pg)), "nenhuma palavra do jogador vai junto");
+    ok(!e.some(x => x.startsWith("erro")), "jogo normal não registra erro");
     ok(merr.length === 0, "versão do site sem erro de script" + (merr.length ? ": " + merr.join(" | ") : ""));
     // versão sem a tag (Artifact e colmeia.html): nada é enviado, mesmo que exista um umami na página
     const n = await mctx.newPage();
@@ -319,6 +321,95 @@ const ok = (cond, msg) => { console.log((cond ? "  ok   " : "  FALHOU ") + msg);
     await n.keyboard.type(pg); await n.keyboard.press("Enter"); await n.waitForTimeout(300);
     ok(await n.evaluate(() => window.__ev.length) === 0, "sem a tag do Umami nenhum evento é enviado (Artifact)");
     await mctx.close();
+  }
+
+  console.log("Erros (spec 010)");
+  {
+    // cada cenário num contexto novo: o erro é provocado por caminhos reais do jogo (progresso corrompido, data quebrada, gravação bloqueada)
+    const siteFile = path.join(os.tmpdir(), "colmeia-test-erros.html");
+    fs.writeFileSync(siteFile, '<!doctype html><html><head><meta charset="utf-8"><script defer src="data:text/javascript," data-website-id="teste"></script></head><body>' + page + "</body></html>");
+    const abre = async (init, opts = {}) => {
+      const c = await browser.newContext({ viewport: { width: 1200, height: 900 } });
+      await c.addInitScript(([cfg, umamiTarde]) => {
+        window.__ev = []; window.__calls = 0;
+        for (const [k, v] of Object.entries(cfg.store || {})) localStorage.setItem(k, v);
+        localStorage.setItem("colmeia:seenHelp", "true");
+        const u = { track: (n, d) => { window.__calls++; if (cfg.quebrado) throw new Error("umami quebrado"); window.__ev.push([n, d]); } };
+        if (umamiTarde) setTimeout(() => { window.umami = u; }, umamiTarde); else window.umami = u;
+        if (cfg.semGravar) Storage.prototype.setItem = function () { throw new DOMException("Setting the value of 'colmeia:livre' exceeded the quota.", "QuotaExceededError"); };
+      }, [init, opts.tarde || 0]);
+      const pg = await c.newPage();
+      await pg.route(/fonts\.(googleapis|gstatic)\.com/, r => r.abort());
+      await pg.goto(opts.url || "file://" + siteFile + (opts.query || "")); await pg.waitForTimeout(opts.espera || 500);
+      return { c, pg, erros: () => pg.evaluate(() => window.__ev.filter(([n]) => n === "erro").map(([, d]) => d)) };
+    };
+    const recusa = async (pg, vezes = 1) => { const c = await pg.$eval("#hive .hex.center", h => h.dataset.l);
+      for (let i = 0; i < vezes; i++) { await pg.keyboard.type(c.repeat(4)); await pg.keyboard.press("Enter"); await pg.waitForTimeout(120); } };
+    const hoje = new Date().toDateString();
+
+    // erro ao abrir, com o Umami chegando 1,5 s depois
+    let t = await abre({ store: { "colmeia:stats": '{"badges":null}' } }, { tarde: 1500, espera: 3000 });
+    let r = await t.erros();
+    ok(r.length === 1 && r[0].fase === "inicio" && r[0].tipo === "erro" && /^TypeError: .* @ renderStats@\d+:\d+$/.test(r[0].erro), "erro ao abrir o jogo é registrado, mesmo com o Umami chegando depois" + (r.length ? ": " + JSON.stringify(r) : ""));
+    await t.c.close();
+
+    // erro jogando (timer do aviso), repetido 4 vezes: vai uma vez só
+    t = await abre({ store: { "colmeia:sugeridas": '{"x":1}' } });
+    await recusa(t.pg, 4); await t.pg.waitForTimeout(300);
+    r = await t.erros();
+    ok(r.length === 1 && r[0].fase === "jogo" && r[0].modo === "Diário" && /^TypeError: .* @ \S+@\d+:\d+$/.test(r[0].erro), "erro jogando vai com fase e modo, uma vez só" + (r.length ? ": " + JSON.stringify(r) : ""));
+    // erros de fora do jogo (extensões, scripts injetados) não contam
+    await t.pg.evaluate(() => { const s = document.createElement("script"); s.src = 'data:text/javascript,throw new Error("de fora")'; document.head.appendChild(s); setTimeout(() => { throw new Error("injetado"); }); });
+    await t.pg.waitForTimeout(300);
+    ok((await t.erros()).length === 1, "erros de fora do jogo são ignorados");
+    await t.c.close();
+
+    // promessa rejeitada ao compartilhar, com link e palavra na mensagem e lixo no endereço: nada disso vai junto
+    t = await abre({}, { query: "?c=zzzzzzz&fbclid=ABC123456" });
+    const centro = await t.pg.$eval("#hive .hex.center", h => h.dataset.l);
+    await t.pg.keyboard.type(centro.repeat(2));
+    await t.pg.evaluate(() => { Date.prototype.toLocaleDateString = function () { throw new RangeError('locale "maria" https://x.y/?q=1 maria@ex.com 1234567'); }; });
+    await t.pg.click("#b-share"); await t.pg.waitForTimeout(300);
+    r = await t.erros();
+    const tudo = JSON.stringify(r);
+    ok(r.length === 1 && r[0].tipo === "promessa" && /shareText@\d+:\d+/.test(r[0].erro), "promessa rejeitada é registrada" + (r.length ? ": " + tudo : ""));
+    ok(!/maria|x\.y|\?q=|fbclid|ABC123456|1234567|file:|colmeia-test/.test(tudo) && !tudo.includes(centro.repeat(2)), "nenhum dado pessoal, endereço ou texto digitado vai junto");
+    await t.c.close();
+
+    // gravação bloqueada: avisa uma vez, só com o nome do erro
+    t = await abre({ semGravar: true });
+    for (let i = 0; i < 3; i++) await t.pg.click("#b-theme");
+    await t.pg.waitForTimeout(200);
+    r = await t.erros();
+    ok(r.length === 1 && r[0].tipo === "armazenamento" && r[0].erro === "QuotaExceededError: salvar", "falha ao gravar o progresso é avisada uma vez, sem a mensagem" + (r.length !== 1 || r[0].tipo !== "armazenamento" ? ": " + JSON.stringify(r) : ""));
+    await t.c.close();
+
+    // limite por carregamento (4 erros diferentes, vão 3) e por aparelho por dia (já com 10 hoje, vai 0)
+    const quatro = { "colmeia:sugeridas": '{"x":1}', "colmeia:sound": "{quebrado" };
+    t = await abre({ store: quatro, semGravar: true });
+    await recusa(t.pg, 1);
+    await t.pg.evaluate(() => { Date.prototype.toLocaleDateString = function () { throw new RangeError("x"); }; });
+    await t.pg.click("#b-share"); await t.pg.waitForTimeout(300);
+    ok((await t.erros()).length === 3, "no máximo 3 erros por carregamento");
+    await t.c.close();
+    t = await abre({ store: { "colmeia:stats": '{"badges":null}', "colmeia:erros": JSON.stringify({ d: hoje, n: 10 }) } });
+    ok((await t.erros()).length === 0, "no máximo 10 erros por aparelho por dia");
+    await t.c.close();
+
+    // Umami quebrado: sem laço, e o jogo continua
+    t = await abre({ store: quatro, quebrado: true, semGravar: true });
+    await recusa(t.pg, 5); await t.pg.waitForTimeout(1500);
+    const chamadas = await t.pg.evaluate(() => window.__calls);
+    await t.pg.keyboard.type(centro.repeat(2));
+    const jogo = await t.pg.evaluate(() => ({ hex: document.querySelectorAll("#hive .hex").length, entrada: document.getElementById("entry").textContent.trim().length }));
+    ok(chamadas <= 8 && jogo.hex === 7 && jogo.entrada > 0, `com o Umami quebrado não entra em laço e o jogo segue (${chamadas} chamadas)`);
+    await t.c.close();
+
+    // sem a tag (Artifact e colmeia.html): nada é enviado
+    t = await abre({ store: { "colmeia:sugeridas": '{"x":1}' } }, { url });
+    await recusa(t.pg, 1); await t.pg.waitForTimeout(300);
+    ok(await t.pg.evaluate(() => window.__ev.length) === 0, "sem a tag do Umami nenhum erro é enviado (Artifact)");
+    await t.c.close();
   }
 
   ok(errors.length === 0, "nenhum erro de script" + (errors.length ? ": " + errors.join(" | ") : ""));

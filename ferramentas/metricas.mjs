@@ -1,7 +1,7 @@
 // Coletor do painel de uso (spec 009). Roda no GitHub Actions a cada hora.
 // Lê os números do Umami pelo link de compartilhamento e grava um resumo em metricas.json.
 // Uso: UMAMI_SHARE=<link ou id de compartilhamento> node ferramentas/metricas.mjs [saida.json]
-import { writeFileSync } from "node:fs";
+import { readFileSync, writeFileSync } from "node:fs";
 
 const SHARE = (process.env.UMAMI_SHARE || "").trim();
 // Umami Cloud serve o app (e a API usada pelo link de compartilhamento) em /analytics/<região>/
@@ -81,7 +81,33 @@ for (let i = DIAS_EVENTOS - 1; i >= 0; i--) {
   porDia.push({ dia: diaISO(a), linhas: await tenta("event-data " + diaISO(a), () => propsDe(a, b, diaISO(a)), []) });
 }
 
-const saida = { atualizado: new Date(agora).toISOString(), fuso: TZ, periodos, serie: Object.values(serie), ...listas, propriedades, porDia, erros };
+// Saúde do site (spec 010). O site responde agora? E a última verificação diária (verificar-site.yml): o passo
+// anterior do metricas.yml grava as últimas execuções em /tmp/verificacao-run.json e o resumo em /tmp/verificacao/.
+const SITE_URL = process.env.SITE_URL || "https://yago-ananias.github.io/colmeia/";
+async function siteAgora() {
+  const t0 = Date.now();
+  try {
+    const r = await fetch(SITE_URL, { cache: "no-store", signal: AbortSignal.timeout(20000) });
+    const txt = await r.text();
+    return { quando: new Date().toISOString(), status: r.status, ms: Date.now() - t0, jogo: txt.includes('id="hive"') };
+  } catch (e) { return { quando: new Date().toISOString(), status: 0, ms: null, jogo: false, falha: String(e.cause?.code || e.cause?.message || e.message || e.name).slice(0, 60) }; }
+}
+function verificacao() {
+  const ler = f => { try { return JSON.parse(readFileSync(f, "utf8")); } catch (e) { return null; } };
+  const runs = ler(process.env.VERIFICACAO_RUNS || "/tmp/verificacao-run.json") || [];
+  const res = ler(process.env.VERIFICACAO_RESUMO || "/tmp/verificacao/verificacao.json");
+  const ult = runs[0];
+  if (!ult) return null;
+  return {
+    quando: (res && res.quando) || ult.createdAt, ok: res ? !!res.ok : ult.conclusion === "success",
+    conclusao: ult.conclusion, link: ult.url, ms: res ? res.ms : null, instavel: (res && res.instavel) || [],
+    checks: ((res && res.checks) || []).slice(0, 20).map(c => ({ nome: String(c.nome).slice(0, 60), ok: !!c.ok, detalhe: String(c.detalhe || "").slice(0, 200) })),
+    dias: runs.map(r => ({ quando: r.createdAt, ok: r.conclusion === "success" })),
+  };
+}
+
+const saida = { atualizado: new Date(agora).toISOString(), fuso: TZ, periodos, serie: Object.values(serie), ...listas, propriedades, porDia, erros,
+  site: await siteAgora(), verificacao: verificacao() };
 writeFileSync(OUT, JSON.stringify(saida));
 console.log(`${OUT}: ${periodos.total ? periodos.total.visitantes : "?"} visitantes no total, ${propriedades.length} linhas de eventos, ${erros.length} erro(s)`);
 if (erros.length) console.log(erros.join("\n"));

@@ -2,6 +2,7 @@ name: Coletar métricas
 
 # A cada hora lê os números do Umami (link de compartilhamento) e grava metricas.json
 # na branch "metricas". O painel da Colmeia no projeto lê esse arquivo. Spec 009.
+# Também confere se o site responde e lê a última verificação diária (verificar-site.yml). Spec 010.
 on:
   schedule:
     - cron: "17 * * * *"
@@ -9,6 +10,7 @@ on:
 
 permissions:
   contents: write
+  actions: read   # ler as execuções e o resumo da verificação do site
 
 concurrency:
   group: metricas
@@ -22,6 +24,15 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
+      - name: Ler a última verificação do site
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          gh run list -w verificar-site.yml -s completed -L 14 --json databaseId,conclusion,createdAt,url,event > /tmp/verificacao-run.json || echo '[]' > /tmp/verificacao-run.json
+          id=$(jq -r '.[0].databaseId // empty' /tmp/verificacao-run.json)
+          if [ -n "$id" ]; then gh run download "$id" -n verificacao -D /tmp/verificacao || echo "Execução $id sem resumo"; fi
       - name: Ler o Umami
         env:
           UMAMI_SHARE: ${{ secrets.UMAMI_SHARE || 'https://cloud.umami.is/share/G9KqGRvAWs7xISod' }}
