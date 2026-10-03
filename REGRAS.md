@@ -69,3 +69,8 @@ O nível é calculado só com os pontos das palavras, como fração da pontuaç�
 
 ## Controles
 Toque ou clique nas letras, ou use o teclado: letras digitam, **Enter** envia, **Backspace** apaga, **espaço** embaralha. Com **Tab** dá para chegar a qualquer botão (inclusive as letras), e Enter ou espaço acionam o botão que está com o foco.
+
+## Medição de uso (spec 009)
+- Só no site (https://yago-ananias.github.io/colmeia/), com o Umami: sem cookies, sem guardar IP e respeitando "Não rastrear" do navegador. O Artifact não mede nada.
+- Conta visitas, de onde vêm e o aparelho, mais estes eventos do jogo: `partida` (modo, desafio, se veio de link, se retomou), `nivel`, `pangrama`, `completa`, `relampago-fim` (pontos), `dica`, `desistiu`, `compartilhar`, `sugestao` e `carregamento` (tempo de carregamento e tema).
+- Nenhuma palavra digitada é enviada. Se o script for bloqueado, o jogo funciona igual.

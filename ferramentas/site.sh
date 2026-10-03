@@ -2,6 +2,8 @@
 # Monta a versão do site (GitHub Pages) em _site/ a partir de colmeia.html + site/ (ícones e manifesto).
 # Uso: sh ferramentas/site.sh   (de dentro da raiz do repositório). Rode montar.sh antes se mudou palavras ou template.
 set -e
+# Medição de uso (spec 009): ID do site no Umami Cloud. Vazio = o site não mede nada.
+UMAMI_ID="f590aacb-f874-4d8c-b03c-2224e16169eb"
 cd "$(dirname "$0")/.."
 rm -rf _site && mkdir -p _site && cp site/* _site/
 {
@@ -23,9 +25,11 @@ cat <<'HEAD'
 <link rel="icon" href="favicon-escuro.svg" type="image/svg+xml" media="(prefers-color-scheme: dark)">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="manifest" href="manifest.webmanifest">
-</head>
-<body>
 HEAD
+if [ -n "$UMAMI_ID" ]; then
+  printf '<script defer src="https://cloud.umami.is/script.js" data-website-id="%s" data-domains="yago-ananias.github.io" data-do-not-track="true"></script>\n' "$UMAMI_ID"
+fi
+printf '</head>\n<body>\n'
 cat colmeia.html
 printf '\n</body>\n</html>\n'
 } > _site/index.html

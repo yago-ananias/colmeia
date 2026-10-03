@@ -1,5 +1,6 @@
 <!--
 Sync Impact Report
+Version: 1.0.0 → 1.1.0 (2026-10-03, spec 009): princípio III ganha a exceção da medição de uso opcional no site.
 Version: 0.0.0 (template) → 1.0.0
 Principles added: I–V (all new)
 Sections added: Restrições Técnicas, Fluxo de Desenvolvimento, Governança
@@ -25,6 +26,9 @@ dicionário e estiver entre as mais usadas na língua. Palavras estranhas report
 O jogo publicado é uma única página HTML autocontida (lista de palavras embutida), que roda offline
 depois de aberta e não depende de servidor nem de conta. O progresso fica no navegador do jogador e o
 jogo funciona normalmente quando o armazenamento local não está disponível.
+Exceção: a versão do site pode carregar um script de medição de uso sem cookies e sem dados pessoais
+(hoje o Umami). Ele é opcional: o jogo funciona igual se ele não carregar, nenhuma palavra digitada é
+enviada, e o arquivo `colmeia.html` e o Artifact não fazem chamadas de medição.
 
 ### IV. Dinâmico e acessível em qualquer tela
 Cada ação tem resposta imediata (animação, mensagem ou som opcional). O jogo funciona no celular
@@ -55,4 +59,4 @@ Esta constituição vale acima de qualquer outra prática do projeto. Mudanças 
 arquivo, subir a versão (MAJOR para remover ou redefinir princípio, MINOR para adicionar, PATCH para
 ajuste de texto) e conferir se specs e planos abertos continuam de acordo.
 
-**Version**: 1.0.0 | **Ratified**: 2026-10-02 | **Last Amended**: 2026-10-02
+**Version**: 1.1.0 | **Ratified**: 2026-10-02 | **Last Amended**: 2026-10-03

@@ -284,6 +284,43 @@ const ok = (cond, msg) => { console.log((cond ? "  ok   " : "  FALHOU ") + msg);
     await q.close();
   }
 
+  console.log("Métricas de uso (spec 009)");
+  {
+    // versão do site: com a tag do Umami (aqui um script vazio) e um umami.track de mentira que só anota
+    const siteFile = path.join(os.tmpdir(), "colmeia-test-site.html");
+    fs.writeFileSync(siteFile, '<!doctype html><html><head><meta charset="utf-8"><script defer src="data:text/javascript," data-website-id="teste"></script></head><body>' + page + "</body></html>");
+    const mctx = await browser.newContext({ viewport: { width: 1200, height: 900 }, colorScheme: "dark" });
+    await mctx.addInitScript(() => { window.__ev = []; window.umami = { track: (n, d) => window.__ev.push([n, d]) }; });
+    const m = await mctx.newPage();
+    const merr = []; m.on("pageerror", e => merr.push(e.message));
+    await m.route(/fonts\.(googleapis|gstatic)\.com/, r => r.abort());
+    await m.goto("file://" + siteFile); await m.waitForTimeout(400); await m.keyboard.press("Escape");
+    const ev = () => m.evaluate(() => window.__ev.map(([n, d]) => n + JSON.stringify(d)));
+    let e = await ev();
+    ok(e.some(x => x.startsWith('partida{"modo":"Diário","desafio":"Manhã","origem":"normal"')), "partida no Diário é registrada com modo e desafio");
+    ok(e.some(x => /^carregamento\{"ms":\d+,"tema":"escuro"\}$/.test(x)), "tempo de carregamento e tema são registrados");
+    const pg = day.words[0].find(w => new Set(w).size === 7);
+    await m.keyboard.type(pg); await m.keyboard.press("Enter"); await m.waitForTimeout(1200);
+    await m.click("#b-hint"); await m.waitForTimeout(100);
+    await m.evaluate(() => Object.defineProperty(navigator, "clipboard", { configurable: true, value: { writeText: () => Promise.resolve() } }));
+    await m.click("#b-share"); await m.waitForTimeout(150);
+    await m.click("#m-relampago"); await m.waitForTimeout(150);
+    e = await ev();
+    ok(e.includes('pangrama{"modo":"Diário"}'), "pangrama é registrado");
+    ok(e.some(x => /^nivel\{"modo":"Diário","nivel":"[^"]+","palavras":1\}$/.test(x)), "subida de nível é registrada com o nível e as palavras");
+    ok(e.includes('dica{"modo":"Diário"}') && e.includes('compartilhar{"modo":"Diário","via":"copia"}'), "dica e compartilhamento são registrados");
+    ok(e.some(x => x.startsWith('partida{"modo":"Relâmpago"')), "partida no Relâmpago é registrada");
+    ok(e.every(x => !x.includes(pg)), "nenhuma palavra do jogador vai junto");
+    ok(merr.length === 0, "versão do site sem erro de script" + (merr.length ? ": " + merr.join(" | ") : ""));
+    // versão sem a tag (Artifact e colmeia.html): nada é enviado, mesmo que exista um umami na página
+    const n = await mctx.newPage();
+    await n.route(/fonts\.(googleapis|gstatic)\.com/, r => r.abort());
+    await n.goto(url); await n.waitForTimeout(400); await n.keyboard.press("Escape");
+    await n.keyboard.type(pg); await n.keyboard.press("Enter"); await n.waitForTimeout(300);
+    ok(await n.evaluate(() => window.__ev.length) === 0, "sem a tag do Umami nenhum evento é enviado (Artifact)");
+    await mctx.close();
+  }
+
   ok(errors.length === 0, "nenhum erro de script" + (errors.length ? ": " + errors.join(" | ") : ""));
   await browser.close();
   console.log(fails ? `\n${fails} teste(s) falharam` : "\nTodos os testes passaram");

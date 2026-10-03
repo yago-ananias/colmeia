@@ -272,6 +272,12 @@ function saveStats(){store.set("stats",stats);renderStats()}
 function award(id){if(stats.badges.includes(id))return;stats.badges.push(id);saveStats();
   const name=(BADGES.find(b=>b[0]===id)||[])[1];if(name)setTimeout(()=>toast("Conquista: "+name,true),900)}
 
+/* ---------- métricas (spec 009): só no site, quando o script do Umami está na página ---------- */
+const TRACK=!!document.querySelector("script[data-website-id]"), TQ=[];
+function flushTrack(){try{if(!window.umami||typeof window.umami.track!=="function")return;while(TQ.length){const [n,d]=TQ.shift();window.umami.track(n,d)}}catch(e){}}
+function track(n,d){if(!TRACK)return;if(TQ.length<30)TQ.push([n,d||{}]);flushTrack()}
+const modeName=()=>({diario:"Diário",livre:"Livre",relampago:"Relâmpago"})[S.mode]||S.mode;
+
 /* ---------- modes ---------- */
 function start(mode,opts={}){
   clearInterval(timerId);timerId=null;
@@ -292,6 +298,7 @@ function start(mode,opts={}){
   $("b-new").hidden=mode!=="livre";$("b-giveup").hidden=mode==="relampago";
   $("b-hint").textContent=mode==="relampago"?"Revelar início (−5 s)":"Revelar início de palavra";
   renderHive();renderAll();
+  track("partida",{modo:modeName(),desafio:mode==="diario"?DNAMES[S.k]:"-",origem:opts.link?"link":"normal",retomada:S.found.length?"sim":"não"});
 }
 const DAILY=3, DNAMES=["Manhã","Tarde","Noite"];
 function dailyCode(day,k){return DAYS[((day-1)*DAILY+k)%DAYS.length]}
@@ -329,6 +336,7 @@ function endLightning(){
   const score=base()+S.bonus, rec=score>stats.best;
   if(rec){stats.best=score;saveStats()}
   if(score>=100)award("r100");
+  track("relampago-fim",{pontos:score,palavras:S.found.length,recorde:rec?"sim":"não"});
   sfx("end");
   sheet(`<h2>${rec?"Novo recorde!":"Tempo esgotado"}</h2>
    <div class="big-num">${score}</div><p class="sub">${base()} pts de palavras + ${S.bonus} de combo · ${S.found.length} palavras</p>
@@ -364,7 +372,7 @@ function submit(){
   S.found.push(w);S.input="";
   const pg=P.pangrams.has(w);
   if(S.mode==="relampago"){S.time+=pg?12:Math.min(2*w.length,14);S.total=Math.max(S.total,S.time)}
-  if(pg){toast("PANGRAMA! +"+pt,true,w);confetti();sfx("pang");stats.pangs++;award("pang");saveStats()}
+  if(pg){toast("PANGRAMA! +"+pt,true,w);confetti();sfx("pang");stats.pangs++;award("pang");saveStats();track("pangrama",{modo:modeName()})}
   else{toast((w.length>=LONG_MIN?"Palavra longa!":w.length>=7?"Incrível!":w.length>=5?"Ótimo!":"Boa!")+" +"+pt+(bonus?` (+${bonus} combo)`:""),false,w);sfx("good")}
   if(S.combo>=5)award("combo5");
   if(S.mode==="diario"&&S.found.length===5)markStreak();
@@ -372,9 +380,10 @@ function submit(){
   const after=rankIndex();
   if(after>before&&S.mode!=="relampago"){const el=$("rankname");el.classList.remove("pop");void el.offsetWidth;el.classList.add("pop");
     setTimeout(()=>toast("Novo nível: "+rankName(),true),700);
+    track("nivel",{modo:modeName(),nivel:RANKS[after][0],palavras:S.found.length});
     if(RANKS[after][0]==="Rainha")award("rainha");
     if(after>=5&&S.hintsUsed===0&&!S.gaveUp)award("semdica")}
-  if(S.found.length===P.list.length){award("completa");setTimeout(()=>{confetti();sheet(`<h2>Colmeia completa!</h2><p>Você achou todas as ${P.list.length} palavras.</p><div class="controls"><button class="btn primary" data-act="close">Fechar</button></div>`)},900)}
+  if(S.found.length===P.list.length){award("completa");track("completa",{modo:modeName(),palavras:S.found.length});setTimeout(()=>{confetti();sheet(`<h2>Colmeia completa!</h2><p>Você achou todas as ${P.list.length} palavras.</p><div class="controls"><button class="btn primary" data-act="close">Fechar</button></div>`)},900)}
 }
 function markStreak(){
   if(stats.lastDay===S.day)return;
@@ -393,7 +402,7 @@ function revealHint(){
   const w=left.sort((a,b)=>a.length-b.length)[Math.floor(Math.random()*Math.min(left.length,Math.ceil(left.length/2)))];
   S.clues.push(w);S.hintsUsed++;
   if(S.mode==="relampago"){S.time-=5}
-  sfx("tap");renderHints();persist();
+  sfx("tap");renderHints();persist();track("dica",{modo:modeName()});
 }
 function giveUp(){
   sheet(`<h2>Ver todas as respostas?</h2><p>As palavras que faltam aparecem na lista e este desafio deixa de contar pontos.</p>
@@ -527,16 +536,16 @@ function shareText(){
 }
 async function share(){
   const txt=shareText();
-  if(navigator.share&&matchMedia("(pointer: coarse)").matches){try{await navigator.share({text:txt});return}catch(e){if(e&&e.name==="AbortError")return}}
-  try{await navigator.clipboard.writeText(txt);toast("Resultado copiado")}
-  catch(e){sheet(`<h2>Copie seu resultado</h2><pre style="white-space:pre-wrap">${txt.replace(/&/g,"&amp;").replace(/</g,"&lt;")}</pre><div class="controls"><button class="btn" data-act="close">Fechar</button></div>`)}
+  if(navigator.share&&matchMedia("(pointer: coarse)").matches){try{await navigator.share({text:txt});track("compartilhar",{modo:modeName(),via:"menu"});return}catch(e){if(e&&e.name==="AbortError")return}}
+  try{await navigator.clipboard.writeText(txt);toast("Resultado copiado");track("compartilhar",{modo:modeName(),via:"copia"})}
+  catch(e){track("compartilhar",{modo:modeName(),via:"janela"});sheet(`<h2>Copie seu resultado</h2><pre style="white-space:pre-wrap">${txt.replace(/&/g,"&amp;").replace(/</g,"&lt;")}</pre><div class="controls"><button class="btn" data-act="close">Fechar</button></div>`)}
 }
 /* sugestão de palavra: abre uma issue pronta no repositório do jogo */
 function suggest(w,reason){
   const body=`Palavra: ${w}\nO jogo respondeu: ${reason}\nDesafio: ${P.code.toUpperCase()} (letra central ${P.center.toUpperCase()})\n\nSe a palavra tem acento, escreva aqui como ela é escrita:\n`;
   const url=`${REPO}/issues/new?title=${encodeURIComponent("Sugestão de palavra: "+w)}&body=${encodeURIComponent(body)}`;
   sheet(`<h2>Sugerir ${w.toUpperCase()}?</h2><p>Acha que essa palavra devia valer? A sugestão abre no GitHub, onde ficam as sugestões para a lista do jogo. Para enviar, é preciso ter uma conta lá.</p>
-  <div class="controls"><a class="btn primary" data-act="suggest" data-w="${w}" href="${url}" target="_blank" rel="noopener">Abrir sugestão</a><button class="btn" data-act="close">Cancelar</button></div>`);
+  <div class="controls"><a class="btn primary" data-act="suggest" data-w="${w}" data-r="${reason}" href="${url}" target="_blank" rel="noopener">Abrir sugestão</a><button class="btn" data-act="close">Cancelar</button></div>`);
 }
 /* link compartilhado: ?c=letras (central primeiro), &m=relampago e &p=pontos para desafiar no Relâmpago */
 function fromLink(){
@@ -545,10 +554,10 @@ function fromLink(){
   if(!/^[a-z]{7}$/.test(c)||new Set(c).size!==7)return false;
   const pz=buildPuzzle(c);if(!pz.pangrams.size||pz.list.length<10)return false;
   try{history.replaceState(null,"",location.pathname+location.hash)}catch(e){}
-  if(q.get("m")==="relampago"){const p=Math.max(0,Math.min(9999,parseInt(q.get("p"),10)||0));start("relampago",{code:c});
+  if(q.get("m")==="relampago"){const p=Math.max(0,Math.min(9999,parseInt(q.get("p"),10)||0));start("relampago",{code:c,link:true});
     sheet(`<h2>Desafio Relâmpago</h2><p>${p?`Alguém fez <b>${p} pontos</b> com estas letras. Consegue mais?`:"Um desafio Relâmpago com estas letras."} O relógio começa quando você fechar esta janela.</p><div class="controls"><button class="btn primary" data-act="close">Começar</button></div>`);return true}
-  const d=dayNumber();for(let k=0;k<DAILY;k++)if(dailyCode(d,k)===c){start("diario",{k});return true}
-  start("livre",{code:c});toast("Desafio compartilhado",true);return true;
+  const d=dayNumber();for(let k=0;k<DAILY;k++)if(dailyCode(d,k)===c){start("diario",{k,link:true});return true}
+  start("livre",{code:c,link:true});toast("Desafio compartilhado",true);return true;
 }
 
 /* ---------- sound + fx ---------- */
@@ -599,8 +608,8 @@ $("overlay").addEventListener("click",e=>{
   if(act==="again")start("relampago");
   else if(act==="daily")start("diario");
   else if(act==="leave")start(e.target.dataset.mode,{fresh:false});
-  else if(act==="reveal"){S.gaveUp=true;persist();renderAll()}
-  else if(act==="suggest"){const v=store.get("sugeridas",[]),w=e.target.dataset.w;if(!v.includes(w)){v.push(w);store.set("sugeridas",v.slice(-200))}toast("Obrigado pela sugestão!")}
+  else if(act==="reveal"){S.gaveUp=true;persist();renderAll();track("desistiu",{modo:modeName(),palavras:S.found.length})}
+  else if(act==="suggest"){track("sugestao",{motivo:e.target.dataset.r||"-"});const v=store.get("sugeridas",[]),w=e.target.dataset.w;if(!v.includes(w)){v.push(w);store.set("sugeridas",v.slice(-200))}toast("Obrigado pela sugestão!")}
 });
 document.addEventListener("keydown",e=>{
   if(e.ctrlKey||e.metaKey||e.altKey)return;
@@ -617,6 +626,11 @@ document.addEventListener("visibilitychange",()=>{if(document.hidden)return;if(S
 setInterval(checkNewDay,30000);
 renderSound();
 if(!fromLink())start("diario");
+function trackLoad(){const nav=performance.getEntriesByType&&performance.getEntriesByType("navigation")[0];
+  const ms=nav&&nav.loadEventEnd>0?nav.loadEventEnd:performance.now();
+  const dark=(document.documentElement.getAttribute("data-theme")||(matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light"))==="dark";
+  track("carregamento",{ms:Math.round(ms/100)*100,tema:dark?"escuro":"claro"})}
+if(TRACK){addEventListener("load",()=>setTimeout(()=>{flushTrack();trackLoad()},0));let tries=0;const iv=setInterval(()=>{flushTrack();if(++tries>20||!TQ.length&&window.umami)clearInterval(iv)},500)}
 if(!store.get("seenHelp",false)){store.set("seenHelp",true);help()}
 })();
 </script>
