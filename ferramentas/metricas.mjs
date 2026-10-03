@@ -10,14 +10,16 @@ const BASE = (process.env.UMAMI_API || `https://cloud.umami.is/analytics/${regia
 const TZ = "America/Sao_Paulo";
 const OUT = process.argv[2] || "metricas.json";
 const DIAS = 30;          // série diária
-const DIAS_EVENTOS = 14;  // propriedades dos eventos por dia
+const DIAS_EVENTOS = 14;  // valores dos eventos dia a dia
 
 if (!SHARE) { console.error("Falta UMAMI_SHARE"); process.exit(1); }
 const shareId = SHARE.includes("/share/") ? SHARE.split("/share/")[1].split(/[/?#]/)[0] : SHARE;
 
 const erros = [];
 async function get(path, token) {
-  const r = await fetch(BASE + path, { headers: token ? { "x-umami-share-token": token, "x-umami-share-context": "1", accept: "application/json" } : { accept: "application/json" } });
+  const headers = { accept: "application/json" };
+  if (token) Object.assign(headers, { "x-umami-share-token": token, "x-umami-share-context": "1" });
+  const r = await fetch(BASE + path, { headers });
   if (!r.ok) throw new Error(`${r.status} em ${path.split("?")[0]}`);
   return r.json();
 }
@@ -57,13 +59,26 @@ const metrica = tipo => tenta("metrics " + tipo, async () =>
 const listas = {};
 for (const [k, tipo] of [["eventos", "event"], ["origens", "referrer"], ["paises", "country"], ["aparelhos", "device"], ["navegadores", "browser"], ["sistemas", "os"]]) listas[k] = await metrica(tipo);
 
-// propriedades dos eventos: últimos 30 dias juntos e os últimos 14 dias um a um
-const props = rows => (rows || []).map(r => ({ evento: r.eventName, prop: r.propertyName, valor: String(r.propertyValue), total: +r.total || 0 }));
-const propriedades = await tenta("event-data 30d", async () => props(await get(`${W}/event-data/events?${q(ini30, agora)}`, token)), []);
+// Propriedades dos eventos. Sem filtro o Umami só diz quais propriedades cada evento tem;
+// com &event=<nome> ele devolve os valores. Últimos 30 dias juntos e os últimos 14 dias um a um.
+const valor = r => String(r.propertyValue ?? r.value ?? r.stringValue ?? r.numberValue ?? "");
+async function propsDe(a, b, nome) {
+  const base = await get(`${W}/event-data/events?${q(a, b)}`, token);
+  const out = [];
+  for (const ev of [...new Set((base || []).map(r => r.eventName))]) {
+    const rows = await get(`${W}/event-data/events?${q(a, b, `&event=${encodeURIComponent(ev)}`)}`, token);
+    for (const r of rows || []) {
+      if (r.propertyValue === undefined && r.value === undefined) { erros.push(`${nome}: ${ev} sem valor (${Object.keys(r).join(",")})`); continue; }
+      out.push({ evento: r.eventName || ev, prop: r.propertyName, valor: valor(r), total: +r.total || 0 });
+    }
+  }
+  return out;
+}
+const propriedades = await tenta("event-data 30d", () => propsDe(ini30, agora, "30d"), []);
 const porDia = [];
 for (let i = DIAS_EVENTOS - 1; i >= 0; i--) {
   const a = hoje - i * 864e5, b = Math.min(a + 864e5 - 1, agora);
-  porDia.push({ dia: diaISO(a), linhas: await tenta("event-data " + diaISO(a), async () => props(await get(`${W}/event-data/events?${q(a, b)}`, token)), []) });
+  porDia.push({ dia: diaISO(a), linhas: await tenta("event-data " + diaISO(a), () => propsDe(a, b, diaISO(a)), []) });
 }
 
 const saida = { atualizado: new Date(agora).toISOString(), fuso: TZ, periodos, serie: Object.values(serie), ...listas, propriedades, porDia, erros };
