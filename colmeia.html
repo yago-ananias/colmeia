@@ -301,8 +301,40 @@ const REJ={};"abacates,abacaxis,abaixadas,abaixados,abajures,abalados,abandonada
 "use strict";
 const $=id=>document.getElementById(id);
 function falhaStore(op,e){const C=window.COLMEIA_ERRO;if(C)C.avisar("armazenamento",(e&&e.name)||"Erro",op,"")}   // só o nome: a mensagem pode citar o que estava salvo
-const store={get(k,d){try{const v=localStorage.getItem("colmeia:"+k);return v?JSON.parse(v):d}catch(e){falhaStore("ler",e);return d}},
-  set(k,v){try{localStorage.setItem("colmeia:"+k,JSON.stringify(v))}catch(e){falhaStore("salvar",e)}}};
+/* ---------- progresso salvo à prova de falhas (spec 012) ----------
+   Cada dado salvo tem um formato (FORMATO). O que não bate é descartado (só a parte com defeito), o jogo abre
+   normalmente, o jogador vê um aviso e o monitoramento recebe só o nome do dado. */
+let descartou=false;
+function descarte(k){const C=window.COLMEIA_ERRO;if(C)C.avisar("armazenamento","DadoInvalido",/^d\d+-\d$/.test(k)?"diario":k,"");
+  if(!descartou){descartou=true;setTimeout(()=>toast("Progresso com defeito descartado"),1200)}}
+const store={get(k,d,formato){let v;
+    try{const s=localStorage.getItem("colmeia:"+k);if(!s)return d;
+      try{v=JSON.parse(s)}catch(e){descarte(k);store.del(k);return d}}
+    catch(e){falhaStore("ler",e);return d}
+    if(!formato)return v;
+    let ruim=false;const r=formato(v,()=>{ruim=true});
+    if(r===undefined){descarte(k);store.del(k);return d}
+    if(ruim){descarte(k);store.set(k,r)}   // a parte boa continua salva
+    return r},
+  set(k,v){try{localStorage.setItem("colmeia:"+k,JSON.stringify(v))}catch(e){falhaStore("salvar",e)}},
+  del(k){try{localStorage.removeItem("colmeia:"+k)}catch(e){}}};
+const natural=(x,ruim)=>{if(x===undefined)return 0;if(Number.isFinite(x)&&x>=0)return Math.floor(x);ruim();return 0};
+const lista=(x,ruim,ok)=>{if(x===undefined)return [];if(!Array.isArray(x)){ruim();return []}
+  const r=x.filter((y,i)=>ok(y)&&x.indexOf(y)===i);if(r.length!==x.length)ruim();return r};
+const objeto=x=>!!x&&typeof x==="object"&&!Array.isArray(x);
+const palavra=x=>typeof x==="string"&&/^[a-z]{4,19}$/.test(x), letras=x=>typeof x==="string"&&/^[a-z]{7}$/.test(x)&&new Set(x).size===7;
+const FORMATO={
+  sim:v=>typeof v==="boolean"?v:undefined,                                   // som, ajuda já vista
+  tema:v=>v==="dark"||v==="light"?v:undefined,
+  vistos:(v,ruim)=>Array.isArray(v)?lista(v,ruim,letras):undefined,          // conjuntos de letras já jogados no Livre
+  sugeridas:(v,ruim)=>Array.isArray(v)?lista(v,ruim,palavra):undefined,
+  stats:(v,ruim)=>objeto(v)?{streak:natural(v.streak,ruim),lastDay:natural(v.lastDay,ruim),best:natural(v.best,ruim),pangs:natural(v.pangs,ruim),
+    badges:lista(v.badges,ruim,b=>BADGES.some(x=>x[0]===b))}:undefined,
+  progresso:(v,ruim)=>{if(!objeto(v)||(v.code!==undefined&&!letras(v.code)))return undefined;   // sem as letras certas, o resto não serve
+    if(v.gaveUp!==undefined&&typeof v.gaveUp!=="boolean")ruim();
+    const r={found:lista(v.found,ruim,palavra),extra:lista(v.extra,ruim,palavra),bonus:natural(v.bonus,ruim),
+      clues:lista(v.clues,ruim,palavra),hintsUsed:natural(v.hintsUsed,ruim),gaveUp:v.gaveUp===true};
+    if(v.code)r.code=v.code;return r}};
 const A=97, bit=c=>1<<(c.charCodeAt(0)-A);
 const MASK=WORDS.map(w=>{let m=0;for(const c of w)m|=bit(c);return m});
 const norm=s=>s.normalize("NFD").replace(/[̀-ͯ]/g,"").toLowerCase();
@@ -324,8 +356,8 @@ function buildPuzzle(code){
 const LONG_BONUS=3, LONG_MIN=8;
 function points(w){return (w.length===4?1:w.length)+(new Set(w).size===7?7:0)+(w.length>=LONG_MIN?LONG_BONUS:0)}
 
-let S={}, P=null, timerId=null, sound=store.get("sound",true), audio=null;
-const stats=Object.assign({streak:0,lastDay:0,best:0,pangs:0,badges:[]},store.get("stats",{}));
+let S={}, P=null, timerId=null, sound=store.get("sound",true,FORMATO.sim), audio=null;
+const stats=Object.assign({streak:0,lastDay:0,best:0,pangs:0,badges:[]},store.get("stats",{},FORMATO.stats));
 function saveStats(){store.set("stats",stats);renderStats()}
 function award(id){if(stats.badges.includes(id))return;stats.badges.push(id);saveStats();
   const name=(BADGES.find(b=>b[0]===id)||[])[1];if(name)setTimeout(()=>toast("Conquista: "+name,true),900)}
@@ -340,17 +372,21 @@ const modeName=()=>({diario:"Diário",livre:"Livre",relampago:"Relâmpago"})[S.m
 function start(mode,opts={}){
   clearInterval(timerId);timerId=null;
   document.querySelectorAll(".modes button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.mode===mode));
-  let code, saved=null;
-  if(mode==="diario"){S.day=dayNumber();S.k=opts.k!=null?opts.k:(S.k||0);saved=store.get("d"+S.day+"-"+S.k,null);code=(saved&&saved.code)||dailyCode(S.day,S.k)}
-  else if(mode==="livre"){const sv=store.get("livre",null);
+  let code, saved=null, chave="";
+  if(mode==="diario"){S.day=dayNumber();S.k=opts.k!=null?opts.k:(S.k||0);chave="d"+S.day+"-"+S.k;saved=store.get(chave,null,FORMATO.progresso);code=(saved&&saved.code)||dailyCode(S.day,S.k)}
+  else if(mode==="livre"){chave="livre";const sv=store.get(chave,null,FORMATO.progresso);
     if(opts.code){saved=sv&&sv.code===opts.code?sv:null;code=opts.code}
-    else{saved=opts.fresh?null:sv;code=saved?saved.code:pickLivre()}
-    markSeen(code)}
+    else{saved=opts.fresh||!(sv&&sv.code)?null:sv;code=saved?saved.code:pickLivre()}}
   else{code=opts.code||pickRich()}
   P=buildPuzzle(code);
+  if(saved&&saved.code===code&&!P.list.length){descarte(chave);store.del(chave);saved=null;   // letras salvas que não formam nenhuma palavra
+    code=mode==="diario"?dailyCode(S.day,S.k):pickLivre();P=buildPuzzle(code)}
+  if(mode==="livre")markSeen(code);
   S=Object.assign({mode,day:S.day,k:S.k,input:"",found:[],extra:[],bonus:0,combo:0,last:0,clues:[],hintsUsed:0,gaveUp:false,outer:shuffle(P.outer.slice())},saved||{});
-  if(!Array.isArray(S.extra))S.extra=[];
-  S.extra=S.extra.filter(w=>{if(!P.valid.has(w))return true;if(!S.found.includes(w))S.found.push(w);return false});   // extra que entrou na lista do desafio passa a contar nele
+  // palavras salvas que não valem mais neste desafio (a lista mudou) saem; extra que entrou na lista passa a contar no desafio
+  const cabe=w=>w.includes(P.center)&&[...w].every(c=>P.letters.has(c));
+  S.found=S.found.filter(w=>P.valid.has(w));S.clues=S.clues.filter(w=>P.valid.has(w));
+  S.extra=S.extra.filter(w=>{if(!P.valid.has(w))return EXTRAS.has(w)&&cabe(w);if(!S.found.includes(w))S.found.push(w);return false});
   S.mode=mode;if(window.COLMEIA_ERRO)COLMEIA_ERRO.modo=modeName();S.input="";S.combo=0;S.last=0;S.outer=shuffle(P.outer.slice());
   if(mode==="relampago"){S.time=75;S.total=75;S.over=false;$("timer").hidden=false;$("clock").hidden=false;
     timerId=setInterval(tick,250);S.t0=performance.now()}
@@ -364,17 +400,17 @@ const DAILY=3, DNAMES=["Manhã","Tarde","Noite"];
 function dailyCode(day,k){return DAYS[((day-1)*DAILY+k)%DAYS.length]}
 /* Livre: só desafios que nunca são diários (LIVRE) e sem repetir conjunto de letras já jogado */
 const setOf=c=>[...c].sort().join("");
-function pickLivre(){const seen=new Set(store.get("vistos",[]));let pool=LIVRE.filter(c=>!seen.has(setOf(c)));
+function pickLivre(){const seen=new Set(store.get("vistos",[],FORMATO.vistos));let pool=LIVRE.filter(c=>!seen.has(setOf(c)));
   if(!pool.length){store.set("vistos",[]);pool=LIVRE}return pool[Math.floor(Math.random()*pool.length)]}
-function markSeen(code){const v=store.get("vistos",[]),s=setOf(code);if(!v.includes(s)){v.push(s);store.set("vistos",v.slice(-1000))}}
+function markSeen(code){const v=store.get("vistos",[],FORMATO.vistos),s=setOf(code);if(!v.includes(s)){v.push(s);store.set("vistos",v.slice(-1000))}}
 function renderDailies(){
   const box=$("dailies");box.hidden=S.mode!=="diario";if(box.hidden)return;
   box.innerHTML="";
   for(let k=0;k<DAILY;k++){
     let label;
     if(k===S.k)label=`<span class="rk">${rankName()} · </span>${S.found.length}/${P.list.length}`;
-    else{const sv=store.get("d"+S.day+"-"+k,null);if(sv&&sv.found&&sv.found.length){const pz=buildPuzzle(sv.code||dailyCode(S.day,k));
-      const b=sv.found.concat(Array.isArray(sv.extra)?sv.extra:[]).reduce((a,w)=>a+points(w),0);let r=0;RANKS.forEach((x,i)=>{if(b/pz.max>=x[1])r=i});label=`<span class="rk">${sv.found.length===pz.list.length?"Completa":RANKS[r][0]} · </span>${sv.found.length}/${pz.list.length}`}else label="Novo"}
+    else{const sv=store.get("d"+S.day+"-"+k,null,FORMATO.progresso),pz=sv&&sv.found.length?buildPuzzle(sv.code||dailyCode(S.day,k)):null,f=pz?sv.found.filter(w=>pz.valid.has(w)):[];
+      if(f.length){const b=f.concat(sv.extra.filter(w=>EXTRAS.has(w))).reduce((a,w)=>a+points(w),0);let r=0;RANKS.forEach((x,i)=>{if(b/pz.max>=x[1])r=i});label=`<span class="rk">${f.length===pz.list.length?"Completa":RANKS[r][0]} · </span>${f.length}/${pz.list.length}`}else label="Novo"}
     const b=document.createElement("button");b.setAttribute("aria-pressed",k===S.k);b.innerHTML=`<b>${DNAMES[k]}</b><small>${label}</small>`;
     b.onclick=()=>{if(k!==S.k)start("diario",{k})};box.appendChild(b);
   }
@@ -568,7 +604,7 @@ let toastT;
 function toast(msg,big,word,sug){const t=$("toast");t.innerHTML="";clearTimeout(toast.t);
   toast.t=setTimeout(()=>{if(word){const w=document.createElement("b");w.className="sr";w.textContent=disp(word).toUpperCase()+": ";t.appendChild(w)}
     const s=document.createElement("span");s.textContent=msg;if(big)s.className="big";t.appendChild(s);
-    if(sug){const done=store.get("sugeridas",[]).includes(sug),b=document.createElement(done?"small":"button");b.className="sug";
+    if(sug){const done=store.get("sugeridas",[],FORMATO.sugeridas).includes(sug),b=document.createElement(done?"small":"button");b.className="sug";
       b.textContent=done?"Já sugerida":"Sugerir";if(!done){b.type="button";b.setAttribute("aria-label","Sugerir "+sug.toUpperCase()+" para a lista");b.onclick=()=>suggest(sug,msg)}
       t.appendChild(b)}},30)}
 function clearToast(){clearTimeout(toast.t);$("toast").innerHTML=""}
@@ -657,7 +693,7 @@ $("b-hint").onclick=revealHint;$("b-giveup").onclick=giveUp;$("b-help").onclick=
 $("b-new").onclick=()=>start("livre",{fresh:true});
 $("b-grid").onclick=()=>{const g=$("grid");g.hidden=!g.hidden;$("b-grid").textContent=g.hidden?"Mostrar mapa":"Esconder mapa";if(!g.hidden)renderGrid()};
 function applyTheme(t){if(t)document.documentElement.setAttribute("data-theme",t);else document.documentElement.removeAttribute("data-theme")}
-applyTheme(store.get("theme",null));
+applyTheme(store.get("theme",null,FORMATO.tema));
 function themeTitle(){const dark=(document.documentElement.getAttribute("data-theme")||(matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light"))==="dark";
   $("b-theme").title=dark?"Modo claro":"Modo escuro";$("b-theme").setAttribute("aria-label",dark?"Mudar para modo claro":"Mudar para modo escuro")}
 themeTitle();
@@ -674,17 +710,22 @@ $("overlay").addEventListener("click",e=>{
   else if(act==="daily")start("diario");
   else if(act==="leave")start(e.target.dataset.mode,{fresh:false});
   else if(act==="reveal"){S.gaveUp=true;persist();renderAll();track("desistiu",{modo:modeName(),palavras:S.found.length})}
-  else if(act==="suggest"){track("sugestao",{motivo:e.target.dataset.r||"-"});const v=store.get("sugeridas",[]),w=e.target.dataset.w;if(!v.includes(w)){v.push(w);store.set("sugeridas",v.slice(-200))}toast("Obrigado pela sugestão!")}
+  else if(act==="suggest"){track("sugestao",{motivo:e.target.dataset.r||"-"});const v=store.get("sugeridas",[],FORMATO.sugeridas),w=e.target.dataset.w;if(!v.includes(w)){v.push(w);store.set("sugeridas",v.slice(-200))}toast("Obrigado pela sugestão!")}
 });
-function focoTeclado(el){try{return el.matches(":focus-visible")}catch(e){return true}}   // navegador sem :focus-visible: deixa o navegador acionar o botão
+// Enter e Espaço acionam o botão com foco só quando o foco chegou nele pelo Tab e nada foi digitado depois (spec 013).
+// Depois de clicar ou tocar, ou de digitar letras, Enter envia a palavra e Espaço embaralha. :focus-visible não serve:
+// o Chromium passa a marcar o botão clicado assim que qualquer tecla é apertada.
+let porTab=false;
+addEventListener("pointerdown",()=>{porTab=false},true);
 document.addEventListener("keydown",e=>{
+  if(e.key==="Tab")porTab=true;
   if(e.ctrlKey||e.metaKey||e.altKey)return;
   if(!$("overlay").hidden){if(e.key==="Escape"&&!(S.mode==="relampago"&&S.over))closeSheet();return}
-  if((e.key==="Enter"||e.key===" ")&&e.target.closest&&e.target.closest("button,a,input,select,textarea")&&focoTeclado(e.target))return;   // botão com foco de teclado: o navegador aciona
+  if((e.key==="Enter"||e.key===" ")&&porTab&&e.target.closest&&e.target.closest("button,a,input,select,textarea"))return;   // botão com foco de teclado: o navegador aciona
   if(e.key==="Enter"){e.preventDefault();submit()}
-  else if(e.key==="Backspace"){e.preventDefault();del()}
+  else if(e.key==="Backspace"){e.preventDefault();porTab=false;del()}
   else if(e.key===" "){e.preventDefault();doShuffle()}
-  else if((e.key||"").length===1){const c=norm(e.key);if(/^[a-z]$/.test(c))addLetter(c)}
+  else if((e.key||"").length===1){const c=norm(e.key);if(/^[a-z]$/.test(c)){porTab=false;addLetter(c)}}
 });
 setInterval(()=>{if(S.mode!=="relampago")renderCombo()},200);
 function checkNewDay(){if(S.mode==="diario"&&dayNumber()!==S.day){start("diario",{k:0});toast("Chegaram os desafios de hoje",true)}}
@@ -697,7 +738,7 @@ function trackLoad(){const nav=performance.getEntriesByType&&performance.getEntr
   const dark=(document.documentElement.getAttribute("data-theme")||(matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light"))==="dark";
   track("carregamento",{ms:Math.round(ms/100)*100,tema:dark?"escuro":"claro"})}
 if(TRACK){addEventListener("load",()=>setTimeout(()=>{flushTrack();trackLoad()},0));let tries=0;const iv=setInterval(()=>{flushTrack();if(++tries>20||!TQ.length&&window.umami)clearInterval(iv)},500)}
-if(!store.get("seenHelp",false)){store.set("seenHelp",true);help()}
+if(!store.get("seenHelp",false,FORMATO.sim)){store.set("seenHelp",true);help()}
 if(window.COLMEIA_ERRO)COLMEIA_ERRO.fase="jogo";
 })();
 </script>

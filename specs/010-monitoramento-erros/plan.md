@@ -13,4 +13,4 @@
 - Cartão "Saúde do jogo" logo abaixo do resumo: site no ar, verificação diária, erros dos jogadores no período (e por carregamento), erros mais frequentes com fase e modo.
 
 ## Testes
-- Bloco "Erros (spec 010)" em `test.js`, em contexto próprio, disparando erros por caminhos reais do jogo (armazenamento corrompido, compartilhar com data quebrada, gravação bloqueada).
+- Bloco "Erros (spec 010)" em `test.js`, em contexto próprio, disparando erros por caminhos reais do jogo (armazenamento corrompido, compartilhar com data quebrada, gravação bloqueada). Desde a spec 012, progresso corrompido não gera mais erro (é descartado com aviso), e os testes provocam o erro quebrando `matchMedia` e `normalize`.

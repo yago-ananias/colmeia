@@ -76,7 +76,12 @@ O nível é calculado só com os pontos das palavras (as extras contam), como fr
 - **Conquistas:** Primeiro pangrama, Combo x5, Virou Rainha, 100 pts no Relâmpago, 3 dias seguidos, Guardiã sem dicas (chegar a Guardiã sem dicas e sem ver respostas) e Colmeia completa.
 
 ## Controles
-Toque ou clique nas letras, ou use o teclado: letras digitam, **Enter** envia, **Backspace** apaga, **espaço** embaralha. Com **Tab** dá para chegar a qualquer botão (inclusive as letras), e Enter ou espaço acionam o botão que está com o foco.
+Toque ou clique nas letras, ou use o teclado: letras digitam, **Enter** envia, **Backspace** apaga, **espaço** embaralha. Com **Tab** dá para chegar a qualquer botão (inclusive as letras), e Enter ou espaço acionam o botão que está com o foco. Depois de clicar ou tocar num botão, ou de digitar letras, Enter volta a enviar a palavra e espaço volta a embaralhar (spec 013).
+
+## Progresso salvo (spec 012)
+- O progresso fica só no navegador: palavras e pontos de cada desafio do dia e do Livre, estatísticas e conquistas, tema, som, letras já vistas no Livre e palavras sugeridas.
+- Se algo salvo estiver com defeito, o jogo abre normalmente, descarta só a parte com defeito (o que estava certo continua) e mostra "Progresso com defeito descartado". Progresso com letras que não formam nenhuma palavra é descartado: o Diário abre com as letras do dia e o Livre sorteia outro desafio.
+- Palavra salva que saiu da lista de palavras some do progresso sem aviso.
 
 ## Medição de uso (spec 009)
 - Só no site (https://yago-ananias.github.io/colmeia/), com o Umami: sem cookies, sem guardar IP e respeitando "Não rastrear" do navegador. O Artifact não mede nada.
@@ -85,6 +90,7 @@ Toque ou clique nas letras, ou use o teclado: letras digitam, **Enter** envia, *
 
 ## Monitoramento de erros (spec 010)
 - Só no site. Se o jogo dá erro no navegador de alguém, vai um evento `erro` no Umami: tipo (erro, promessa ou armazenamento), a mensagem limpa com a função e a linha, se foi ao abrir ou jogando, e o modo.
+- Progresso salvo com defeito (spec 012) vai como `armazenamento` com `DadoInvalido: <dado>` (por exemplo `stats` ou `diario`), nunca com o que estava salvo.
 - Nunca vai endereço da página, texto entre aspas, link, e-mail, número longo nem palavra digitada. Cada erro vai uma vez por carregamento; no máximo 3 por carregamento e 10 por aparelho por dia.
 - Erros de extensões do navegador e de scripts de fora são ignorados.
 - Todo dia (07:41 de Brasília) um robô joga no site: ajuda, colmeia, desafios do dia, palavra aceita e recusada, tema, Relâmpago, ícones, tempo de carga e erros. Não conta visita no Umami. Se falhar, abre uma issue "Site com problema (verificação diária)" no repositório; quando volta, ela é fechada. A mesma verificação roda no site montado antes de cada publicação.

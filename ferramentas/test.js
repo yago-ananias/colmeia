@@ -220,6 +220,48 @@ const ok = (cond, msg) => { console.log((cond ? "  ok   " : "  FALHOU ") + msg);
   ok(await p.$eval("#toast", e => e.textContent === ""), "aviso some quando a próxima palavra começa");
   await p.keyboard.press("Backspace");
 
+  console.log("Enter depois de clicar (spec 013)");
+  {
+    // clicar ou tocar e depois usar o teclado: Enter envia a palavra e Espaço embaralha; só o foco que chegou pelo Tab aciona o botão
+    const novo = async () => {
+      const c = await browser.newContext({ viewport: { width: 1200, height: 900 } });
+      await c.addInitScript(() => localStorage.setItem("colmeia:seenHelp", "true"));
+      const pg = await c.newPage(); pg.on("pageerror", e => errors.push(e.message));
+      await pg.route(/fonts\.(googleapis|gstatic)\.com/, r => r.abort()); await pg.goto(url); await pg.waitForTimeout(300);
+      return { c, pg };
+    };
+    const palavra = pg => pg.evaluate(() => { const c = document.querySelector("#hive .hex.center").dataset.l, L = new Set([...document.querySelectorAll("#hive .hex")].map(h => h.dataset.l));
+      return WORDS.find(w => w.includes(c) && [...w].every(x => L.has(x)) && w.length >= 5); });
+    const estado = pg => pg.evaluate(() => ({ n: document.querySelectorAll("#words li").length, entrada: document.getElementById("entry").textContent.trim(),
+      janela: !document.getElementById("overlay").hidden, livre: document.getElementById("m-livre").getAttribute("aria-pressed") === "true" }));
+    const digita = async (pg, w) => { await pg.keyboard.type(w); await pg.keyboard.press("Enter"); await pg.waitForTimeout(450); };
+    let { c, pg } = await novo(), w = await palavra(pg);
+    for (const l of w) await pg.click(`#hive .hex[data-l="${l}"]`);
+    await pg.keyboard.press("Enter"); await pg.waitForTimeout(450);
+    let e = await estado(pg);
+    ok(e.n === 1 && e.entrada === "", `letras clicadas e Enter no teclado enviam "${w}" (sem repetir a última letra)` + (e.n !== 1 ? ": " + JSON.stringify(e) : ""));
+    await pg.click(`#hive .hex[data-l="${w[0]}"]`); await pg.keyboard.press(" "); await pg.waitForTimeout(100);
+    e = await estado(pg);
+    ok(e.entrada.length === 1, "letra clicada e Espaço no teclado embaralham, sem repetir a letra" + (e.entrada.length !== 1 ? ` (entrada "${e.entrada}")` : ""));
+    await c.close();
+    ({ c, pg } = await novo());
+    await pg.click("#m-livre"); await pg.waitForTimeout(200); w = await palavra(pg);
+    await digita(pg, w); e = await estado(pg);
+    ok(e.n === 1 && e.livre, `clicar em Livre, digitar e Enter envia a palavra` + (e.n !== 1 ? ": " + JSON.stringify(e) : ""));
+    await c.close();
+    ({ c, pg } = await novo());
+    await pg.click("#m-relampago"); await pg.waitForTimeout(3500); w = await palavra(pg);
+    await digita(pg, w); e = await estado(pg);
+    ok(e.n === 1 && !e.janela, "clicar em Relâmpago, digitar e Enter envia a palavra (sem perguntar se quer abandonar)" + (e.n !== 1 || e.janela ? ": " + JSON.stringify(e) : ""));
+    await c.close();
+    ({ c, pg } = await novo());
+    await pg.keyboard.press("Tab"); await pg.focus("#m-livre"); await pg.keyboard.press("Enter"); await pg.waitForTimeout(250);
+    const trocou = (await estado(pg)).livre; w = await palavra(pg);
+    await digita(pg, w); e = await estado(pg);
+    ok(trocou && e.n === 1 && e.livre, "só teclado: Tab e Enter trocam para Livre, e depois de digitar, Enter envia a palavra" + (!trocou || e.n !== 1 ? ": " + JSON.stringify({ trocou, ...e }) : ""));
+    await c.close();
+  }
+
   console.log("Compartilhar, Livre e sugestão (spec 008)");
   const hiveSet = () => p.$$eval(".hex", h => h.map(x => x.dataset.l).sort().join(""));
   const hiveCode = () => p.evaluate(() => { const c = document.querySelector(".hex.center").dataset.l;
@@ -368,7 +410,8 @@ const ok = (cond, msg) => { console.log((cond ? "  ok   " : "  FALHOU ") + msg);
 
   console.log("Erros (spec 010)");
   {
-    // cada cenário num contexto novo: o erro é provocado por caminhos reais do jogo (progresso corrompido, data quebrada, gravação bloqueada)
+    // cada cenário num contexto novo: o erro é provocado quebrando uma função do navegador (matchMedia, normalize, data) ou bloqueando a gravação;
+    // progresso salvo corrompido não gera mais erro de script desde a spec 012, só o aviso "DadoInvalido"
     const siteFile = path.join(os.tmpdir(), "colmeia-test-erros.html");
     fs.writeFileSync(siteFile, '<!doctype html><html><head><meta charset="utf-8"><script defer src="data:text/javascript," data-website-id="teste"></script></head><body>' + page + "</body></html>");
     const abre = async (init, opts = {}) => {
@@ -380,24 +423,27 @@ const ok = (cond, msg) => { console.log((cond ? "  ok   " : "  FALHOU ") + msg);
         const u = { track: (n, d) => { window.__calls++; if (cfg.quebrado) throw new Error("umami quebrado"); window.__ev.push([n, d]); } };
         if (umamiTarde) setTimeout(() => { window.umami = u; }, umamiTarde); else window.umami = u;
         if (cfg.semGravar) Storage.prototype.setItem = function () { throw new DOMException("Setting the value of 'colmeia:livre' exceeded the quota.", "QuotaExceededError"); };
+        if (cfg.semMatchMedia) window.matchMedia = () => null;
       }, [init, opts.tarde || 0]);
-      const pg = await c.newPage();
+      const pg = await c.newPage(), falhas = [];
+      pg.on("pageerror", e => falhas.push(e.message));
       await pg.route(/fonts\.(googleapis|gstatic)\.com/, r => r.abort());
       await pg.goto(opts.url || "file://" + siteFile + (opts.query || "")); await pg.waitForTimeout(opts.espera || 500);
-      return { c, pg, erros: () => pg.evaluate(() => window.__ev.filter(([n]) => n === "erro").map(([, d]) => d)) };
+      return { c, pg, falhas, erros: () => pg.evaluate(() => window.__ev.filter(([n]) => n === "erro").map(([, d]) => d)) };
     };
     const recusa = async (pg, vezes = 1) => { const c = await pg.$eval("#hive .hex.center", h => h.dataset.l);
       for (let i = 0; i < vezes; i++) { await pg.keyboard.type(c.repeat(4)); await pg.keyboard.press("Enter"); await pg.waitForTimeout(120); } };
     const hoje = new Date().toDateString();
 
-    // erro ao abrir, com o Umami chegando 1,5 s depois
-    let t = await abre({ store: { "colmeia:stats": '{"badges":null}' } }, { tarde: 1500, espera: 3000 });
+    // erro ao abrir (matchMedia quebrado no título do botão de tema), com o Umami chegando 1,5 s depois
+    let t = await abre({ semMatchMedia: true }, { tarde: 1500, espera: 3000 });
     let r = await t.erros();
-    ok(r.length === 1 && r[0].fase === "inicio" && r[0].tipo === "erro" && /^TypeError: .* @ renderStats@\d+:\d+$/.test(r[0].erro), "erro ao abrir o jogo é registrado, mesmo com o Umami chegando depois" + (r.length ? ": " + JSON.stringify(r) : ""));
+    ok(r.length === 1 && r[0].fase === "inicio" && r[0].tipo === "erro" && /^TypeError: .* @ themeTitle@\d+:\d+$/.test(r[0].erro), "erro ao abrir o jogo é registrado, mesmo com o Umami chegando depois" + (r.length ? ": " + JSON.stringify(r) : ""));
     await t.c.close();
 
-    // erro jogando (timer do aviso), repetido 4 vezes: vai uma vez só
-    t = await abre({ store: { "colmeia:sugeridas": '{"x":1}' } });
+    // erro jogando (normalize quebrado: cada letra digitada falha), repetido 4 vezes: vai uma vez só
+    t = await abre({});
+    await t.pg.evaluate(() => { String.prototype.normalize = function () { return undefined; }; });
     await recusa(t.pg, 4); await t.pg.waitForTimeout(300);
     r = await t.erros();
     ok(r.length === 1 && r[0].fase === "jogo" && r[0].modo === "Diário" && /^TypeError: .* @ \S+@\d+:\d+$/.test(r[0].erro), "erro jogando vai com fase e modo, uma vez só" + (r.length ? ": " + JSON.stringify(r) : ""));
@@ -427,10 +473,11 @@ const ok = (cond, msg) => { console.log((cond ? "  ok   " : "  FALHOU ") + msg);
     ok(r.length === 1 && r[0].tipo === "armazenamento" && r[0].erro === "QuotaExceededError: salvar", "falha ao gravar o progresso é avisada uma vez, sem a mensagem" + (r.length !== 1 || r[0].tipo !== "armazenamento" ? ": " + JSON.stringify(r) : ""));
     await t.c.close();
 
-    // limite por carregamento (4 erros diferentes, vão 3) e por aparelho por dia (já com 10 hoje, vai 0)
+    // limite por carregamento (4 avisos diferentes: som e sugestões com defeito, gravação bloqueada e promessa; vão 3)
+    // e por aparelho por dia (já com 10 hoje, vai 0)
     const quatro = { "colmeia:sugeridas": '{"x":1}', "colmeia:sound": "{quebrado" };
     t = await abre({ store: quatro, semGravar: true });
-    await recusa(t.pg, 1);
+    await recusa(t.pg, 1); await t.pg.click("#b-theme");
     await t.pg.evaluate(() => { Date.prototype.toLocaleDateString = function () { throw new RangeError("x"); }; });
     await t.pg.click("#b-share"); await t.pg.waitForTimeout(300);
     ok((await t.erros()).length === 3, "no máximo 3 erros por carregamento");
@@ -452,6 +499,77 @@ const ok = (cond, msg) => { console.log((cond ? "  ok   " : "  FALHOU ") + msg);
     t = await abre({ store: { "colmeia:sugeridas": '{"x":1}' } }, { url });
     await recusa(t.pg, 1); await t.pg.waitForTimeout(300);
     ok(await t.pg.evaluate(() => window.__ev.length) === 0, "sem a tag do Umami nenhum erro é enviado (Artifact)");
+    await t.c.close();
+
+    console.log("Progresso salvo à prova de falhas (spec 012)");
+    // cada dado salvo com defeito: o jogo abre com as 7 letras, sem erro de script, avisa o jogador, aceita palavra
+    // e o monitoramento só recebe o nome do dado
+    const AVISO = "Progresso com defeito descartado";
+    const dia = Math.round((new Date(new Date().getFullYear(), new Date().getMonth(), new Date().getDate()) - new Date(2026, 9, 1)) / 864e5) + 1, DIA = "colmeia:d" + dia + "-0";
+    const [w1, w2] = day.words[0], letras = [...day.codes[0]].sort().join(""), DIA_OK = JSON.stringify({ code: day.codes[0], found: [w1] });
+    const aceita = async (pg, evita) => {
+      const w = await pg.evaluate(evita => { const c = document.querySelector("#hive .hex.center").dataset.l, L = new Set([...document.querySelectorAll("#hive .hex")].map(h => h.dataset.l));
+        return WORDS.find(w => w.includes(c) && [...w].every(x => L.has(x)) && !evita.includes(w)); }, evita);
+      const n0 = await pg.$$eval("#words li", l => l.length);
+      await pg.keyboard.type(w); await pg.keyboard.press("Enter"); await pg.waitForTimeout(450);
+      return (await pg.$$eval("#words li", l => l.length)) === n0 + 1;
+    };
+    const caso = async (nome, store, { livre, recusar, evita = [], aviso = true, confere, url: u } = {}) => {
+      const t = await abre({ store }, u ? { url: u } : {});
+      if (livre) await t.pg.click("#m-livre");
+      if (recusar) await recusa(t.pg, 1);
+      await t.pg.waitForTimeout(1500);
+      const msg = await t.pg.$eval("#toast", e => e.textContent), hex = await t.pg.$$eval("#hive .hex", h => h.length);
+      const extra = confere ? await confere(t.pg) : true, joga = await aceita(t.pg, evita), r = await t.erros();
+      const certo = hex === 7 && joga && !t.falhas.length && msg === (aviso ? AVISO : "") && extra === true && r.every(e => e.tipo === "armazenamento" && /^DadoInvalido: \w+$/.test(e.erro));
+      ok(certo, nome + (certo ? "" : ": " + JSON.stringify({ hex, joga, msg, falhas: t.falhas, extra, r })));
+      await t.c.close();
+    };
+    const titulo = pg => pg.$eval("#foundtitle", e => e.textContent);
+    await caso("estatísticas com defeito: o jogo abre, avisa e mantém o recorde que estava certo", { "colmeia:stats": '{"streak":4,"best":30,"badges":null}' },
+      { confere: async pg => (await pg.$eval("#s-best", e => e.textContent)) === "30" || "recorde " + (await pg.$eval("#s-best", e => e.textContent)) });
+    await caso("estatísticas que não são objeto: começam do zero", { "colmeia:stats": '"x"' });
+    await caso("diário com lista de palavras quebrada: abre vazio", { [DIA]: '{"found":null}' }, { confere: async pg => /^0 de \d+ palavras/.test(await titulo(pg)) || await titulo(pg) });
+    await caso("diário com letras inválidas: abre com as letras de hoje", { [DIA]: '{"code":"zz","found":["abc"]}' },
+      { confere: async pg => (await pg.$$eval("#hive .hex", h => h.map(x => x.dataset.l).sort().join(""))) === letras || "letras erradas" });
+    await caso("diário com letras que não formam palavra: abre com as letras de hoje", { [DIA]: '{"code":"qwxyzkj","found":["casa"]}' },
+      { confere: async pg => (await pg.$$eval("#hive .hex", h => h.map(x => x.dataset.l).sort().join(""))) === letras || "letras erradas" });
+    await caso("som salvo com JSON quebrado", { "colmeia:sound": "{quebrado" });
+    await caso("tema salvo inválido: volta ao tema do aparelho", { "colmeia:theme": '"roxo"' },
+      { confere: async pg => (await pg.evaluate(() => document.documentElement.getAttribute("data-theme"))) === null || "tema aplicado" });
+    await caso("Livre com lista de letras vistas quebrada", { "colmeia:vistos": '{"a":1}' },
+      { livre: true, confere: async pg => (await pg.evaluate(() => JSON.parse(localStorage.getItem("colmeia:vistos")).length)) === 1 || "vistos não refeito" });
+    await caso("Livre salvo com letras que não formam palavra: abre outro desafio", { "colmeia:livre": '{"code":"qwxyzkj","found":["casa"]}' },
+      { livre: true, confere: async pg => /^0 de [1-9]\d* palavras/.test(await titulo(pg)) || await titulo(pg) });
+    await caso("palavras sugeridas quebradas: aviso depois de uma palavra recusada", { "colmeia:sugeridas": '{"x":1}' }, { recusar: true });
+    await caso("progresso em parte com defeito: fica a parte certa", { [DIA]: JSON.stringify({ code: day.codes[0], found: [w1, w2, 42, w1], bonus: -5, hintsUsed: "x" }) },
+      { evita: [w1, w2], confere: async pg => {
+        const n = await pg.$$eval("#words li", l => l.length), salvo = await pg.evaluate(k => JSON.parse(localStorage.getItem(k)), DIA);
+        return n === 2 && salvo.found.join() === [w1, w2].join() && salvo.bonus === 0 && salvo.hintsUsed === 0 || JSON.stringify({ n, salvo }); } });
+    await caso("palavra salva que saiu da lista: some sem aviso", { [DIA]: JSON.stringify({ code: day.codes[0], found: [w1, day.codes[0][0].repeat(4)] }) },
+      { aviso: false, evita: [w1], confere: async pg => (await pg.$$eval("#words li", l => l.length)) === 1 || "palavras: " + await titulo(pg) });
+    await caso("progresso certo não gera aviso", { [DIA]: DIA_OK }, { aviso: false, evita: [w1] });
+    {
+      // tudo o que o jogo salva de verdade (palavras, dica, desistência, tema, som, Livre, sugestão) volta sem aviso ao recarregar
+      const t = await abre({});
+      for (const w of [w1, w2]) { await t.pg.keyboard.type(w); await t.pg.keyboard.press("Enter"); await t.pg.waitForTimeout(450); }
+      await t.pg.click("#b-hint"); await t.pg.click("#b-theme"); await t.pg.click("#b-sound");
+      await t.pg.click("#dailies button:nth-child(2)"); await t.pg.waitForTimeout(200);
+      await t.pg.click("#b-giveup"); await t.pg.waitForTimeout(200); await t.pg.click('#sheet [data-act="reveal"]').catch(() => {}); await t.pg.waitForTimeout(200);
+      await t.pg.click("#m-livre"); await t.pg.waitForTimeout(200); await aceita(t.pg, []);
+      await t.pg.evaluate(() => localStorage.setItem("colmeia:sugeridas", JSON.stringify(["abcd"])));
+      const antes = await t.pg.evaluate(() => Object.keys(localStorage).filter(k => k.startsWith("colmeia:")).sort());
+      await t.pg.reload(); await t.pg.waitForTimeout(1600);
+      const msg = await t.pg.$eval("#toast", e => e.textContent), r = await t.erros(), n = await t.pg.$$eval("#words li", l => l.length);
+      const certo = msg === "" && !r.length && !t.falhas.length && n === 2 && antes.length >= 8;
+      ok(certo, `progresso salvo de verdade (${antes.length} dados) volta sem aviso ao recarregar` + (certo ? "" : ": " + JSON.stringify({ msg, r, n, antes, falhas: t.falhas })));
+      await t.c.close();
+    }
+    await caso("versão sem monitoramento (Artifact) também abre e avisa", { "colmeia:stats": '{"badges":null}' }, { url });
+    t = await abre({ store: { "colmeia:stats": '{"badges":"segredo","best":"maria"}' } });
+    r = await t.erros();
+    ok(r.length === 1 && r[0].tipo === "armazenamento" && r[0].erro === "DadoInvalido: stats" && r[0].fase === "inicio" && !/segredo|maria/.test(JSON.stringify(r)),
+      "dado com defeito é avisado ao painel só pelo nome, nunca pelo conteúdo" + (r.length !== 1 ? ": " + JSON.stringify(r) : ""));
     await t.c.close();
   }
 
