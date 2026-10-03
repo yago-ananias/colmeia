@@ -1,7 +1,7 @@
 # Palavras removidas da lista do jogo (sem acento, uma por linha ou separadas por espaço).
 # Estrangeirismos, nomes próprios, siglas e formas raras.
 abel able acme adao aids amir argo arre baal babi babu baby back baco bang best bibi bleu blog blue bond boom brie buda bull
-caga caim caio cali chai chat chia choi cori cris dali dara deja didi diet dima dina dino dita dodo doll duda eden eita eros esto
+caga caim caio cali chai chat chia choi cori cris dara deja didi diet dima dina dino dita dodo doll duda eden eita eros esto
 fido fife fifi gage gaia gear gita golf haja haji hall hari hein here homo hula iago ines inge iras ires jaco jaga japa java jinx joao john jose juan juju
 kemp kilo kung laia lala lana lear lila lili line link lino lise live lope luis lulu luna lupo lyme madi made mail maja mali manu mari maxi mija mijo mile milo milu mimi mogo mojo momo mona mori
 nani nara nega nele nene nero nilo nina nini noel noir nola nope nuno olga opal oque otis pepe peri pero pili pipi plus pool pope pras prem rafi rali rami rana rani raul rave
@@ -29,3 +29,5 @@ acosta adama adela agra amane anata aninha asia astra aurore baja bali bambino b
 servia siria indonesia sardenha toscana galileia havana montana pandora troia urano galia sumeria sistina
 marica escrota xota
 apena arrasa descasca desencana ecoa emana enoja entristece exala fascina irradia oscila perdura revida condiz descende aflige aflija advinha equivoquei pressenti renuncio sentencio tenciona tenciono revelo relaxe oica idolatra preza vegeta venera verte noutra encima anoite
+# Spec 011: forma de verbo que o dicionário lista como palavra e preposição italiana dos treebanks (dali, de + ali, voltou a valer)
+oico della

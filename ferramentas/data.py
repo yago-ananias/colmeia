@@ -1,4 +1,4 @@
-# Gera data.js: lista de palavras (WORDS, DISP), recusas com motivo (REJ) e os desafios.
+# Gera data.js: lista de palavras (WORDS, DISP), palavras extras (EXTRA, spec 011), recusas com motivo (REJ) e os desafios.
 # Desafios: DAYS é a programação dos diários (3 por dia, a partir de 01/10/2026) e LIVRE os do Livre e do Relâmpago.
 # Os dois grupos nunca têm o mesmo conjunto de letras, então o Livre não mostra um diário (nem de outro dia).
 # A programação fica em diarios.txt: os dias que já foram ao ar (até depois de amanhã, por causa dos fusos)
@@ -70,10 +70,22 @@ flat=[c for codes in days for c in codes]
 assert not {key(c) for c in flat}&{key(c) for c in livre}, 'diário e Livre com o mesmo conjunto de letras'
 
 disp={n:d for n,d in out.items() if n!=d}
-print(len(words),'palavras;',len(days),'dias de diários;',len(livre),'desafios no Livre;',len(disp),'com acento')
-js="const WORDS="+json.dumps(','.join(words))+".split(',');\nconst DISP="+json.dumps(disp,ensure_ascii=False,separators=(',',':'))+";\n"
-js+="const DAYS="+json.dumps(','.join(flat))+".split(',');\nconst LIVRE="+json.dumps(','.join(livre))+".split(',');\n"
 rej=json.load(open('rejected.json',encoding='utf8'))
+# palavras extras (spec 011): termos técnicos e palavras raras que valem e pontuam, mas não são respostas dos desafios.
+# Só entram as que cabem em algum desafio (todas as letras no desafio, com a letra central).
+extras=json.load(open('extras.json',encoding='utf8')) if os.path.exists('extras.json') else {}
+cabe=set()
+for code in set(flat)|set(livre):
+    M=mask(code); cb=1<<(ord(code[0])-97); s=M
+    while s:                                   # todos os subconjuntos das 7 letras
+        if s&cb: cabe.add(s)
+        s=(s-1)&M
+extra=sorted(n for n in extras if n not in out and n not in rej and mask(n) in cabe)
+disp.update({n:extras[n] for n in extra if extras[n]!=n})
+print(len(words),'palavras;',len(extra),'extras;',len(days),'dias de diários;',len(livre),'desafios no Livre;',len(disp),'com acento')
+js="const WORDS="+json.dumps(','.join(words))+".split(',');\nconst DISP="+json.dumps(disp,ensure_ascii=False,separators=(',',':'))+";\n"
+js+="const EXTRA="+json.dumps(','.join(extra))+".split(',');\n"
+js+="const DAYS="+json.dumps(','.join(flat))+".split(',');\nconst LIVRE="+json.dumps(','.join(livre))+".split(',');\n"
 js+="const REJ={};"+"".join(f"{json.dumps(','.join(sorted(k for k,v in rej.items() if v==t)))}.split(',').forEach(w=>REJ[w]='{t}');" for t in 'pvf')+"\n"
 open('data.js','w',encoding='utf8').write(js)
 print(len(js.encode()))

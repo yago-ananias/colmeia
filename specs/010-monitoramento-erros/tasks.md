@@ -7,4 +7,4 @@
 - [X] T005 [US2] Coletor: site agora e última verificação
 - [X] T006 [US3] Painel: cartão "Saúde do jogo", nos dois temas e no celular
 - [X] T007 REGRAS.md
-- [ ] T008 YAGO dá o ok; enviar e rodar a primeira verificação
+- [X] T008 YAGO dá o ok; enviar e rodar a primeira verificação

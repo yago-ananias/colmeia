@@ -1,9 +1,12 @@
-# Confere a lista de palavras do jogo contra deve_valer.txt e nao_deve_valer.txt.
+# Confere a lista de palavras do jogo contra deve_valer.txt, nao_deve_valer.txt e termos_tecnicos.txt.
 # Uso: python3 diagnostico.py [pasta com words.json e rejected.json] [--hunspell]
+#   se a pasta tiver extras.json (palavras extras, spec 011), também confere que nenhuma palavra de
+#   nao_deve_valer.txt virou extra e que as de termos_tecnicos.txt valem (na lista ou como extra)
 #   pasta padrão: /mnt/project-files/soletra/ferramentas/.cache
 #   --hunspell: também procura estrangeirismos e nomes próprios com o Hunspell pt_BR
 #               (precisa de pt_BR.aff e pt_BR.dic na mesma pasta e de `pip install spylls`; leva alguns minutos)
-# Sai com código 1 se alguma palavra de deve_valer.txt não vale ou alguma de nao_deve_valer.txt vale.
+# Sai com código 1 se alguma palavra de deve_valer.txt não vale, alguma de nao_deve_valer.txt vale
+# ou (com extras.json) algum termo técnico não vale.
 import json, os, sys, unicodedata
 
 here = os.path.dirname(os.path.abspath(__file__))
@@ -11,6 +14,8 @@ args = [a for a in sys.argv[1:] if not a.startswith('--')]
 cache = args[0] if args else '/mnt/project-files/soletra/ferramentas/.cache'
 words = json.load(open(os.path.join(cache, 'words.json'), encoding='utf8'))
 rej = json.load(open(os.path.join(cache, 'rejected.json'), encoding='utf8'))
+ex_path = os.path.join(cache, 'extras.json')
+extras = json.load(open(ex_path, encoding='utf8')) if os.path.exists(ex_path) else None
 MOTIVO = {'p': 'plural', 'v': 'verbo conjugado', 'f': 'palavra funcional'}
 
 def norm(w):
@@ -37,10 +42,18 @@ for x in faltam: print('   ', x)
 falhas += len(faltam)
 
 nao = lista('nao_deve_valer.txt')
-sobram = [w for w in nao if norm(w) in words]
-print(f"\nNão devem valer: {len(nao) - len(sobram)} de {len(nao)} ok")
-if sobram: print('    ainda valem:', ' '.join(sobram))
+sobram = [w for w in nao if norm(w) in words or (extras and norm(w) in extras)]
+print(f"\nNão devem valer: {len(nao) - len(sobram)} de {len(nao)} ok" + (" (lista e extras)" if extras is not None else ""))
+if sobram: print('    ainda valem:', ' '.join(w + (' (extra)' if extras and norm(w) in extras else '') for w in sobram))
 falhas += len(sobram)
+
+# termos técnicos (spec 011): valem na lista principal ou como palavra extra
+if extras is not None:
+    tec = lista('termos_tecnicos.txt')
+    fora = [w for w in tec if norm(w) not in words and norm(w) not in extras]
+    print(f"\nTermos técnicos: {len(tec) - len(fora)} de {len(tec)} ok ({sum(1 for w in tec if norm(w) in extras)} como extra)")
+    if fora: print('    faltam:', ' '.join(fora))
+    falhas += len(fora)
 
 # plurais: palavra terminada em s cujo singular também está na lista (rins/rim, vagens/vagem)
 def singulares(w):
@@ -54,7 +67,7 @@ plur = sorted(words[n] for n in words if n.endswith('s') and any(s in words for 
 print(f"\nPossíveis plurais (o singular também vale): {len(plur)}")
 if plur: print('   ', ' '.join(plur))
 
-print(f"\nTotal: {len(words)} palavras válidas, {len(rej)} recusadas com motivo")
+print(f"\nTotal: {len(words)} palavras válidas, {len(rej)} recusadas com motivo" + (f", {len(extras)} extras" if extras is not None else ""))
 
 if '--hunspell' in sys.argv:
     from spylls.hunspell import Dictionary

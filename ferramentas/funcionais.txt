@@ -1,12 +1,19 @@
-# Pronomes, preposições, conjunções e contrações (não valem no jogo, como no Soletra do g1)
-# pronomes
-eles elas voce voces nos vos mim comigo contigo consigo conosco convosco lhes isso isto aquilo este esta estes estas esse essa esses essas aquele aquela aqueles aquelas
-meu minha meus minhas teu tua teus tuas seu sua seus suas nosso nossa nossos nossas vosso vossa dele dela deles delas
+# Palavras funcionais. Cada bloco começa com uma linha "# [x] ...", onde x diz o que acontece com as palavras:
+#   [f]  não valem; o jogo responde "Pronomes não valem"
+#   [ok] valem sempre (desde a spec 011, preposições e conjunções valem)
+#   [p]  plurais de contrações; o jogo responde "Plural não vale"
+# [f] pronomes
+eles elas você vocês nós vós mim comigo contigo consigo conosco convosco lhes isso isto aquilo este esta estes estas esse essa esses essas aquele aquela aqueles aquelas
+meu minha meus minhas teu tua teus tuas seu sua seus suas nosso nossa nossos nossas vosso vossa
 algum alguma alguns algumas nenhum nenhuma nenhuns outro outra outros outras qual quais quem cujo cuja cujos cujas tanto tanta quanto quanta quantos quantas
-alguem ninguem tudo nada algo cada mesmo mesma proprio propria qualquer quaisquer tal tais demais ambos ambas
-# preposições e contrações
-para pelo pela pelos pelas entre sobre desde contra perante apos ante ate como sem sob tras durante mediante exceto salvo conforme
-num numa nuns numas neste nesta nesse nessa naquele naquela nisso nisto naquilo deste desta desse dessa daquele daquela disso disto daquilo
-dum duma daqui dali dela aonde donde pra pras pros praquele
-# conjunções
-mais porque porem pois embora contudo todavia entretanto portanto enquanto quando senao apesar conquanto porquanto quer
+alguém ninguém tudo nada algo cada mesmo mesma próprio própria qualquer quaisquer tal tais demais ambos ambas
+# [f] contrações com pronome
+dele dela deles delas nele nela neles nelas neste nesta nesse nessa naquele naquela nisso nisto naquilo deste desta desse dessa daquele daquela disso disto daquilo praquele
+destes destas desses dessas nestes nestas nesses nessas daqueles daquelas naqueles naquelas noutro noutra noutras doutro doutra doutros doutras
+# [ok] preposições e contrações com artigo ou advérbio
+para pelo pela entre sobre desde contra perante após ante trás durante mediante exceto salvo conforme segundo consoante afora
+numa duma daqui dali aonde donde
+# [ok] conjunções
+mais porque porém pois embora contudo todavia entretanto portanto enquanto quando senão apesar conquanto porquanto quer logo caso
+# [p] plurais de contrações
+pelos pelas numas nuns dumas duns pras pros

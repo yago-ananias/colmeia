@@ -100,12 +100,12 @@ const ok = (cond, msg) => { console.log((cond ? "  ok   " : "  FALHOU ") + msg);
     const pick = t => Object.keys(REJ).find(w => REJ[w] === t && fits(w));
     return { overlap: WORDS.filter(w => REJ[w]).length, p: pick("p"), v: pick("v"), f: pick("f"),
       has: ["aluno", "aluna", "correr", "jogar", "laranja"].filter(w => WORDS.includes(w)).length,
-      not: ["laranjas", "correu", "jogou", "casas", "porque", "eles"].filter(w => WORDS.includes(w)) };
+      not: ["laranjas", "correu", "jogou", "casas", "eles"].filter(w => WORDS.includes(w)) };
   }, day.codes[0]);
   ok(rules.overlap === 0, "nenhuma palavra válida está marcada como recusada");
   ok(rules.has === 5, "aluno, aluna, correr, jogar e laranja valem");
-  ok(rules.not.length === 0, "laranjas, correu, jogou, casas, porque e eles não valem" + (rules.not.length ? ": " + rules.not : ""));
-  for (const [t, msg] of [["p", "Plural não vale"], ["v", "Só verbos no infinitivo"], ["f", "Pronomes, preposições e conjunções não valem"]]) {
+  ok(rules.not.length === 0, "laranjas, correu, jogou, casas e eles não valem" + (rules.not.length ? ": " + rules.not : ""));
+  for (const [t, msg] of [["p", "Plural não vale"], ["v", "Só verbos no infinitivo"], ["f", "Pronomes não valem"]]) {
     if (!rules[t]) continue;
     const n0 = await found();
     await p.keyboard.type(rules[t]); await p.keyboard.press("Enter");
@@ -134,6 +134,49 @@ const ok = (cond, msg) => { console.log((cond ? "  ok   " : "  FALHOU ") + msg);
     const disp = await p.evaluate(w => DISP[w], accented);
     ok(shown.includes(disp), `digitar "${accented}" aceita e mostra "${disp}"`);
   }
+  console.log("Preposições, conjunções e palavras extras (spec 011)");
+  const s11 = await p.evaluate(code => {
+    const L = new Set(code), fits = w => w.length >= 4 && w.includes(code[0]) && [...w].every(c => L.has(c));
+    const W = new Set(WORDS), X = new Set(EXTRA);
+    return {
+      func: ["para", "pelo", "porque", "quando", "embora", "sobre", "entre", "desde", "contra", "porem", "apos"].filter(w => !W.has(w)),
+      pron: ["eles", "voce", "isso", "nosso", "comigo", "neste", "aquilo"].filter(w => W.has(w) || X.has(w)),
+      semAviso: ["eles", "isso", "nosso"].filter(w => REJ[w] !== "f"),
+      repetidas: EXTRA.filter(w => W.has(w) || REJ[w]).length, n: EXTRA.length,
+      ex: EXTRA.filter(w => fits(w) && w.length >= 5 && new Set(w).size < 7).sort((a, b) => a.length - b.length || a.localeCompare(b))[0] || null,
+    };
+  }, day.codes[0]);
+  ok(s11.func.length === 0, "preposições e conjunções valem (para, pelo, porque, quando, embora, sobre, após, porém…)" + (s11.func.length ? ": faltam " + s11.func : ""));
+  ok(s11.pron.length === 0 && s11.semAviso.length === 0, "pronomes continuam de fora, com o aviso de pronome" + (s11.pron.length ? ": valem " + s11.pron : "") + (s11.semAviso.length ? "; sem aviso: " + s11.semAviso : ""));
+  ok(s11.n > 3000 && s11.repetidas === 0, `${s11.n} palavras extras, nenhuma repetida da lista principal ou das recusadas`);
+  {
+    // listas de regressão: termos técnicos valem (na lista ou como extra) e nada de nao_deve_valer.txt virou extra
+    const lerLista = nome => fs.readFileSync(path.join(__dirname, "listas", nome), "utf8").split("\n").filter(l => !l.startsWith("#")).join(" ").split(/\s+/)
+      .map(w => w.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase()).filter(w => w.length >= 4 && /^[a-z]+$/.test(w) && new Set(w).size <= 7);
+    const fx = await p.evaluate(([tec, nao]) => {
+      const W = new Set(WORDS), X = new Set(EXTRA), bit = c => 1 << (c.charCodeAt(0) - 97), mk = w => [...w].reduce((m, c) => m | bit(c), 0);
+      const puz = DAYS.concat(LIVRE).map(c => [mk(c), bit(c[0])]), cabe = w => { const m = mk(w); return puz.some(([M, cb]) => (m & ~M) === 0 && (m & cb)); };
+      const t = tec.filter(cabe);   // o jogo só leva as extras que cabem em algum desafio
+      return { n: t.length, fora: t.filter(w => !W.has(w) && !X.has(w)), extra: t.filter(w => X.has(w)).length, nao: nao.filter(w => X.has(w)) };
+    }, [lerLista("termos_tecnicos.txt"), lerLista("nao_deve_valer.txt")]);
+    ok(fx.n > 50 && fx.fora.length === 0, `termos técnicos valem (${fx.n - fx.fora.length} de ${fx.n} que cabem em algum desafio, ${fx.extra} como extra)` + (fx.fora.length ? ": faltam " + fx.fora : ""));
+    ok(fx.nao.length === 0, "nada de nao_deve_valer.txt virou palavra extra" + (fx.nao.length ? ": " + fx.nao : ""));
+  }
+  if (s11.ex) {
+    const n0 = await found(), t0 = await p.$eval("#foundtitle", e => e.textContent), before = await pts();
+    await p.keyboard.type(s11.ex); await p.keyboard.press("Enter"); await p.waitForTimeout(80);
+    const shown = await p.$eval("#toast span", e => e.textContent);
+    await p.waitForTimeout(400);
+    const t1 = await p.$eval("#foundtitle", e => e.textContent), gain = (await pts()) - before;
+    const expect = (s11.ex.length === 4 ? 1 : s11.ex.length) + (s11.ex.length >= 8 ? 3 : 0);
+    ok(shown.startsWith("Palavra extra! +" + expect) && gain === expect, `extra "${s11.ex}" aceita ("${shown}") e soma ${gain} pontos`);
+    ok((await found()) === n0 + 1 && t1.split(" palavras")[0] === t0.split(" palavras")[0] && /\+1 extra$/.test(t1), `extra entra na lista sem mudar a contagem do desafio ("${t0}" → "${t1}")`);
+    ok(await p.$eval("#words li.ex .tag", e => e.textContent).catch(() => "") === "extra", "palavra extra aparece marcada na lista (leitor de tela diz \"extra\")");
+    await p.keyboard.type(s11.ex); await p.keyboard.press("Enter"); await p.waitForTimeout(80);
+    const again = await p.$eval("#toast span", e => e.textContent);
+    await p.waitForTimeout(400);
+    ok(again === "Já encontrada" && (await found()) === n0 + 1, "a mesma palavra extra não conta de novo");
+  } else ok(false, "nenhuma palavra extra cabe no desafio Manhã de hoje");
   const nManha = await found();
   await p.click("#dailies button:nth-child(2)");
   await p.waitForTimeout(200);
@@ -142,7 +185,7 @@ const ok = (cond, msg) => { console.log((cond ? "  ok   " : "  FALHOU ") + msg);
   await p.waitForTimeout(200);
   ok((await found()) === nManha, "voltar para Manhã mantém o progresso");
   await p.reload(); await p.waitForTimeout(300);
-  ok((await found()) === nManha, "progresso recuperado ao recarregar (SC-005)");
+  ok((await found()) === nManha && await p.$$eval("#words li.ex", l => l.length) === 1, "progresso recuperado ao recarregar, com a palavra extra (SC-005)");
 
   console.log("Acessibilidade (spec 007)");
   ok(await p.evaluate(() => document.documentElement.lang) === "pt-BR", "página declara idioma pt-BR");

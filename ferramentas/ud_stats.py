@@ -1,7 +1,8 @@
 # Conta, para cada palavra (minúscula), como ela aparece nos treebanks UD do português.
 # Saída: ud.json {forma: {ok, p, v, n, f, cap}}
 #   ok = substantivo/adjetivo no singular, verbo no infinitivo, particípio singular, advérbio, numeral
-#   p = plural · v = verbo conjugado/gerúndio · n = nome próprio · f = palavra funcional · cap = vezes com inicial maiúscula fora do início da frase
+#   p = plural · v = verbo conjugado/gerúndio · n = nome próprio · f = pronome ou determinante · cap = vezes com inicial maiúscula fora do início da frase
+#   (preposições e conjunções contam como ok desde a spec 011)
 import glob, json, collections
 st=collections.defaultdict(lambda: collections.Counter())
 for fn in glob.glob('ud/*.conllu'):
@@ -19,7 +20,8 @@ for fn in glob.glob('ud/*.conllu'):
         if form[0].isupper() and not first: s['cap']+=1
         first=False
         if upos=='PROPN': s['n']+=1
-        elif upos in ('PRON','ADP','CCONJ','SCONJ','DET'): s['f']+=1
+        elif upos in ('PRON','DET'): s['f']+=1          # pronomes e determinantes: não valem
+        elif upos in ('ADP','CCONJ','SCONJ'): s['ok']+=1  # preposições e conjunções: valem desde a spec 011
         elif upos in ('VERB','AUX'):
             vf=F.get('VerbForm') or ('Inf' if w==lemma else 'Fin')   # sem anotação (GSD): compara com o lema
             if vf=='Inf': s['ok']+=1

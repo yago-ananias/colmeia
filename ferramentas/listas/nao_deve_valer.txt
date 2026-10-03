@@ -32,8 +32,13 @@ arranca apaga olha toma deve arrasta empurra pendura sossega escorrega machuca a
 chora indo chiu correu corri sabe disse pode estava fazendo falando pensei ficou morreu
 chegou falou olhe venha diga
 
-# Pronomes, preposições e conjunções
-você para isso pelo neste comigo quando porque embora
+# Pronomes (preposições e conjunções valem desde a spec 011; veja deve_valer.txt)
+você isso neste comigo eles nosso aquilo desses nestas della
 
 # Palavrões e termos ofensivos
 putaria puteiro boiola crioulo neguinho porra caralho merda foder babaca
+
+# Spec 011: o que não pode virar palavra extra (ofensas, nomes científicos em latim, estrangeirismos, plurais e verbos conjugados)
+fiofo quenga baranga tribufu mocreia broxar debiloide mongoloide
+cerevisiae bacillus mellitus inputs stops chauffeur
+versáteis libaneses hifens inábeis erodindo deságuam oiçam

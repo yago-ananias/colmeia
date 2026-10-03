@@ -7,15 +7,23 @@ Tudo abaixo vem do código do jogo (`template.html`).
 - Toda palavra precisa ter **4 letras ou mais** e **usar a letra central**.
 - Só valem as letras da colmeia, e cada uma pode se repetir quantas vezes quiser.
 - Acentos e cedilha não importam: digite `acao` para "ação". A palavra aparece com acento na lista.
-- A palavra precisa estar na lista do jogo (cerca de 11.500 palavras comuns do português).
+- A palavra precisa estar na lista do jogo (cerca de 11.600 palavras comuns do português) ou ser uma **palavra extra** (veja abaixo).
 - **Plurais não valem**: *laranja* vale, *laranjas* não. Palavras que já terminam em "s" no singular (*lápis*, *ônibus*) valem.
 - **Verbos só no infinitivo**: *correr* vale, *correu* e *corri* não.
 - **Masculino e feminino valem**: *aluno* e *aluna*, *leão* e *leoa*.
-- **Ficam de fora**: pronomes, preposições, conjunções (e contrações como *pelo*, *neste*), nomes próprios, estrangeirismos, palavrões e termos técnicos ou científicos.
+- **Preposições e conjunções valem** (*para*, *porque*, *quando*, *após*, *porém*), inclusive contrações com artigo ou advérbio (*pelo*, *numa*, *daqui*). Os plurais delas não valem (*pelos*).
+- **Ficam de fora**: pronomes e contrações com pronome (*eles*, *você*, *isso*, *dele*, *neste*), nomes próprios, estrangeirismos e palavrões.
 - Palavra repetida não conta de novo.
-- Mensagens de erro: "Muito curta", "Falta a letra central", "Já encontrada", "Plural não vale", "Só verbos no infinitivo", "Pronomes, preposições e conjunções não valem", "Não está na lista". Letra fora da colmeia nem entra (a palavra treme).
+- Mensagens de erro: "Muito curta", "Falta a letra central", "Já encontrada", "Plural não vale", "Só verbos no infinitivo", "Pronomes não valem", "Não está na lista". Letra fora da colmeia nem entra (a palavra treme).
 - **Pangrama** é a palavra que usa as 7 letras. Todo desafio tem pelo menos um.
 - Cada desafio tem entre 22 e 65 palavras.
+
+## Palavras extras (spec 011)
+- Termos técnicos e científicos e palavras menos comuns que o dicionário conhece (*sinapse*, *entalpia*, *usucapião*, *bissetriz*) valem como **palavra extra**. O aviso é "Palavra extra! +N".
+- Somam pontos como qualquer palavra (com bônus e combo) e contam para o nível. No Relâmpago também dão tempo.
+- Não contam para a contagem de palavras do desafio ("N de M palavras"), para "Colmeia completa" nem para os 5 acertos da sequência de dias, e não aparecem nas dicas nem em "Ver respostas".
+- Aparecem na lista com a etiqueta "extra", e o título mostra "+N extras". O resultado compartilhado também mostra as extras.
+- Seguem as mesmas regras: sem plural, verbo conjugado, nome próprio, estrangeirismo, nome científico em latim ou palavrão.
 
 ## Pontos por palavra
 | Palavra | Pontos |
@@ -35,7 +43,7 @@ Os bônus somam: um pangrama de 9 letras vale 9 + 7 + 3 = 19. O combo multiplica
 - Nos modos Diário e Livre o bônus de combo aparece separado ("+N combo") e **não conta para o nível**. No Relâmpago ele soma na pontuação final.
 
 ## Níveis (Diário e Livre)
-O nível é calculado só com os pontos das palavras, como fração da pontuação máxima do desafio:
+O nível é calculado só com os pontos das palavras (as extras contam), como fração da pontuação máxima do desafio (que só soma as palavras do desafio):
 
 | Nível | A partir de |
 |-------|-------------|
@@ -64,7 +72,7 @@ O nível é calculado só com os pontos das palavras, como fração da pontuaç�
 - **Sugerir:** quando o jogo recusa uma palavra de 4 letras ou mais com a letra central (fora da lista, plural, verbo ou pronome), aparece o botão "Sugerir". Ele abre uma sugestão pronta no GitHub do jogo (é preciso ter conta lá). Depois, a palavra aparece como "Já sugerida".
 
 ## Sequência e conquistas
-- **Dias seguidos:** o dia conta quando você acha 5 palavras em um desafio diário. Pular um dia zera a sequência.
+- **Dias seguidos:** o dia conta quando você acha 5 palavras do desafio (extras não contam) em um desafio diário. Pular um dia zera a sequência.
 - **Conquistas:** Primeiro pangrama, Combo x5, Virou Rainha, 100 pts no Relâmpago, 3 dias seguidos, Guardiã sem dicas (chegar a Guardiã sem dicas e sem ver respostas) e Colmeia completa.
 
 ## Controles

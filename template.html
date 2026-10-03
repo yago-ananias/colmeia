@@ -113,6 +113,10 @@ a:focus-visible{outline:3px solid var(--plum);outline-offset:2px}
 .words li.pg{font-weight:700;color:var(--plum)}
 .words li.miss{color:var(--muted);font-style:italic}
 .words li.new{animation:flash 1.2s}
+.words li.ex,.exn{color:var(--honey-text)}
+.words li.ex>span::after,.exn::before{content:"";display:inline-block;width:6px;height:6px;border-radius:50%;background:currentColor;vertical-align:middle}
+.words li.ex>span::after{margin-left:5px}
+.exn::before{margin-right:4px}
 .empty{color:var(--muted);font-size:.9rem;margin:8px 0 0}
 .linkbtn{border:0;background:none;color:var(--plum);font-weight:700;padding:0;font-size:.85rem}
 /* hints */
@@ -297,6 +301,7 @@ const A=97, bit=c=>1<<(c.charCodeAt(0)-A);
 const MASK=WORDS.map(w=>{let m=0;for(const c of w)m|=bit(c);return m});
 const norm=s=>s.normalize("NFD").replace(/[̀-ͯ]/g,"").toLowerCase();
 const disp=w=>DISP[w]||w;
+const EXTRAS=new Set(EXTRA);   // palavras extras (spec 011): valem e pontuam, mas não são respostas do desafio
 const RANKS=[["Ovo",0],["Larva",.03],["Pupa",.08],["Operária",.15],["Exploradora",.25],["Guardiã",.40],["Rainha",.60]];
 const BADGES=[["pang","Primeiro pangrama"],["combo5","Combo x5"],["rainha","Virou Rainha"],["r100","100 pts no Relâmpago"],["streak3","3 dias seguidos"],["semdica","Guardiã sem dicas"],["completa","Colmeia completa"]];
 const COMBO_WINDOW=12000;
@@ -337,7 +342,9 @@ function start(mode,opts={}){
     markSeen(code)}
   else{code=opts.code||pickRich()}
   P=buildPuzzle(code);
-  S=Object.assign({mode,day:S.day,k:S.k,input:"",found:[],bonus:0,combo:0,last:0,clues:[],hintsUsed:0,gaveUp:false,outer:shuffle(P.outer.slice())},saved||{});
+  S=Object.assign({mode,day:S.day,k:S.k,input:"",found:[],extra:[],bonus:0,combo:0,last:0,clues:[],hintsUsed:0,gaveUp:false,outer:shuffle(P.outer.slice())},saved||{});
+  if(!Array.isArray(S.extra))S.extra=[];
+  S.extra=S.extra.filter(w=>{if(!P.valid.has(w))return true;if(!S.found.includes(w))S.found.push(w);return false});   // extra que entrou na lista do desafio passa a contar nele
   S.mode=mode;if(window.COLMEIA_ERRO)COLMEIA_ERRO.modo=modeName();S.input="";S.combo=0;S.last=0;S.outer=shuffle(P.outer.slice());
   if(mode==="relampago"){S.time=75;S.total=75;S.over=false;$("timer").hidden=false;$("clock").hidden=false;
     timerId=setInterval(tick,250);S.t0=performance.now()}
@@ -361,14 +368,14 @@ function renderDailies(){
     let label;
     if(k===S.k)label=`<span class="rk">${rankName()} · </span>${S.found.length}/${P.list.length}`;
     else{const sv=store.get("d"+S.day+"-"+k,null);if(sv&&sv.found&&sv.found.length){const pz=buildPuzzle(sv.code||dailyCode(S.day,k));
-      const b=sv.found.reduce((a,w)=>a+points(w),0);let r=0;RANKS.forEach((x,i)=>{if(b/pz.max>=x[1])r=i});label=`<span class="rk">${sv.found.length===pz.list.length?"Completa":RANKS[r][0]} · </span>${sv.found.length}/${pz.list.length}`}else label="Novo"}
+      const b=sv.found.concat(Array.isArray(sv.extra)?sv.extra:[]).reduce((a,w)=>a+points(w),0);let r=0;RANKS.forEach((x,i)=>{if(b/pz.max>=x[1])r=i});label=`<span class="rk">${sv.found.length===pz.list.length?"Completa":RANKS[r][0]} · </span>${sv.found.length}/${pz.list.length}`}else label="Novo"}
     const b=document.createElement("button");b.setAttribute("aria-pressed",k===S.k);b.innerHTML=`<b>${DNAMES[k]}</b><small>${label}</small>`;
     b.onclick=()=>{if(k!==S.k)start("diario",{k})};box.appendChild(b);
   }
 }
 function pickRich(){for(let i=0;i<40;i++){const c=LIVRE[Math.floor(Math.random()*LIVRE.length)];const p=buildPuzzle(c);if(p.list.length>=35)return c}return LIVRE[0]}
 function persist(){
-  const keep={code:P.code,found:S.found,bonus:S.bonus,clues:S.clues,hintsUsed:S.hintsUsed,gaveUp:S.gaveUp};
+  const keep={code:P.code,found:S.found,extra:S.extra,bonus:S.bonus,clues:S.clues,hintsUsed:S.hintsUsed,gaveUp:S.gaveUp};
   if(S.mode==="diario")store.set("d"+S.day+"-"+S.k,keep);else if(S.mode==="livre")store.set("livre",keep);
 }
 function tick(){
@@ -386,7 +393,7 @@ function endLightning(){
   track("relampago-fim",{pontos:score,palavras:S.found.length,recorde:rec?"sim":"não"});
   sfx("end");
   sheet(`<h2>${rec?"Novo recorde!":"Tempo esgotado"}</h2>
-   <div class="big-num">${score}</div><p class="sub">${base()} pts de palavras + ${S.bonus} de combo · ${S.found.length} palavras</p>
+   <div class="big-num">${score}</div><p class="sub">${base()} pts de palavras + ${S.bonus} de combo · ${S.found.length} palavras${extraTxt()}</p>
    <p>Recorde: <b>${stats.best}</b> pts</p>
    <p class="sub">Palavras que ficaram de fora: ${P.list.filter(w=>!S.found.includes(w)).slice(0,12).map(disp).join(", ")}${P.list.length-S.found.length>12?"…":""}</p>
    <div class="controls"><button class="btn primary" data-act="again">Jogar de novo</button><button class="btn" data-act="daily">Ir para o diário</button></div>`);
@@ -409,18 +416,20 @@ function submit(){
   let err=null;
   if(w.length<4)err="Muito curta";
   else if(!w.includes(P.center))err="Falta a letra central";
-  else if(S.found.includes(w))err="Já encontrada";
-  else if(!P.valid.has(w))err={p:"Plural não vale",v:"Só verbos no infinitivo",f:"Pronomes, preposições e conjunções não valem"}[REJ[w]]||"Não está na lista";
-  if(err){toast(err,false,w,w.length>=4&&w.includes(P.center)&&!S.found.includes(w)?w:null);bump($("entry"),"shake");sfx("bad");S.input="";setTimeout(renderEntry,380);return}
+  else if(S.found.includes(w)||S.extra.includes(w))err="Já encontrada";
+  else if(!P.valid.has(w)&&!EXTRAS.has(w))err={p:"Plural não vale",v:"Só verbos no infinitivo",f:"Pronomes não valem"}[REJ[w]]||"Não está na lista";
+  if(err){toast(err,false,w,w.length>=4&&w.includes(P.center)&&!S.found.includes(w)&&!S.extra.includes(w)?w:null);bump($("entry"),"shake");sfx("bad");S.input="";setTimeout(renderEntry,380);return}
   const before=rankIndex();
   const now=performance.now();
   S.combo=(S.last&&now-S.last<COMBO_WINDOW)?Math.min(S.combo+1,5):1;S.last=now;
   const pt=points(w), bonus=pt*(S.combo-1);S.bonus+=bonus;
-  S.found.push(w);S.input="";
-  const pg=P.pangrams.has(w);
+  const ex=!P.valid.has(w);   // palavra extra: pontua e dá tempo, mas não conta para completar o desafio
+  if(ex)S.extra.push(w);else S.found.push(w);
+  S.input="";
+  const pg=!ex&&P.pangrams.has(w);
   if(S.mode==="relampago"){S.time+=pg?12:Math.min(2*w.length,14);S.total=Math.max(S.total,S.time)}
   if(pg){toast("PANGRAMA! +"+pt,true,w);confetti();sfx("pang");stats.pangs++;award("pang");saveStats();track("pangrama",{modo:modeName()})}
-  else{toast((w.length>=LONG_MIN?"Palavra longa!":w.length>=7?"Incrível!":w.length>=5?"Ótimo!":"Boa!")+" +"+pt+(bonus?` (+${bonus} combo)`:""),false,w);sfx("good")}
+  else{toast((ex?"Palavra extra!":w.length>=LONG_MIN?"Palavra longa!":w.length>=7?"Incrível!":w.length>=5?"Ótimo!":"Boa!")+" +"+pt+(bonus?` (+${bonus} combo)`:""),false,w);sfx("good")}
   if(S.combo>=5)award("combo5");
   if(S.mode==="diario"&&S.found.length===5)markStreak();
   renderAll(w);persist();
@@ -430,7 +439,7 @@ function submit(){
     track("nivel",{modo:modeName(),nivel:RANKS[after][0],palavras:S.found.length});
     if(RANKS[after][0]==="Rainha")award("rainha");
     if(after>=5&&S.hintsUsed===0&&!S.gaveUp)award("semdica")}
-  if(S.found.length===P.list.length){award("completa");track("completa",{modo:modeName(),palavras:S.found.length});setTimeout(()=>{confetti();sheet(`<h2>Colmeia completa!</h2><p>Você achou todas as ${P.list.length} palavras.</p><div class="controls"><button class="btn primary" data-act="close">Fechar</button></div>`)},900)}
+  if(!ex&&S.found.length===P.list.length){award("completa");track("completa",{modo:modeName(),palavras:S.found.length});setTimeout(()=>{confetti();sheet(`<h2>Colmeia completa!</h2><p>Você achou todas as ${P.list.length} palavras.</p><div class="controls"><button class="btn primary" data-act="close">Fechar</button></div>`)},900)}
 }
 function markStreak(){
   if(stats.lastDay===S.day)return;
@@ -457,7 +466,8 @@ function giveUp(){
 }
 
 /* ---------- render ---------- */
-function base(){return S.found.reduce((s,w)=>s+points(w),0)}
+function base(){return S.found.concat(S.extra).reduce((s,w)=>s+points(w),0)}
+const extraTxt=()=>S.extra.length?` + ${S.extra.length} extra${S.extra.length>1?"s":""}`:"";
 function rankIndex(){const f=P.max?base()/P.max:0;let i=0;RANKS.forEach((r,k)=>{if(f>=r[1])i=k});return i}
 function rankName(){return S.found.length===P.list.length?"Colmeia completa":RANKS[rankIndex()][0]}
 function renderAll(newWord){renderDailies();renderEntry();renderRank();renderWords(newWord);renderHints();renderCombo();renderStats();if(S.mode==="relampago")renderTimer()}
@@ -502,12 +512,13 @@ function renderRank(){
 }
 function renderWords(newWord){
   const ul=$("words");
-  $("foundtitle").textContent=`${S.found.length} de ${P.list.length} palavras`+(P.pangrams.size?` · ${[...P.pangrams].filter(w=>S.found.includes(w)).length}/${P.pangrams.size} pangrama${P.pangrams.size>1?"s":""}`:"");
+  $("foundtitle").innerHTML=`${S.found.length} de ${P.list.length} palavras`+(P.pangrams.size?` · ${[...P.pangrams].filter(w=>S.found.includes(w)).length}/${P.pangrams.size} pangrama${P.pangrams.size>1?"s":""}`:"")+(S.extra.length?` · <span class="exn">+${S.extra.length} extra${S.extra.length>1?"s":""}</span>`:"");
   let list=S.found.slice();
   if(S.gaveUp)list=P.list.slice();
-  list.sort((a,b)=>a.localeCompare(b));
+  list=list.concat(S.extra).sort((a,b)=>a.localeCompare(b));
   $("wordsempty").hidden=list.length>0;ul.hidden=!list.length;
-  ul.innerHTML=list.map(w=>`<li class="${P.pangrams.has(w)?"pg ":""}${S.found.includes(w)?"":"miss "}${w===newWord?"new":""}"><span>${disp(w)}</span><small>${points(w)}</small></li>`).join("");
+  ul.innerHTML=list.map(w=>{const ex=S.extra.includes(w);
+    return `<li class="${P.pangrams.has(w)?"pg ":""}${ex?"ex ":S.found.includes(w)?"":"miss "}${w===newWord?"new":""}"><span>${disp(w)}${ex?'<span class="sr tag">extra</span>':""}</span><small>${points(w)}</small></li>`}).join("");
 }
 function renderHints(){
   const used=S.hintsUsed||0;
@@ -564,7 +575,8 @@ function help(){sheet(`<img class="mark lg-l" src="data:image/svg+xml;base64,PHN
  <li>A <b>letra central</b> precisa estar em todas as palavras. As letras podem se repetir.</li>
  <li>Acentos e cedilha não importam: digite <i>acao</i> para <i>ação</i>.</li>
  <li><b>Plurais não valem</b> (<i>laranjas</i>). <b>Verbos só no infinitivo</b> (<i>correr</i> vale, <i>correu</i> não). Masculino e feminino valem (<i>aluno</i> e <i>aluna</i>).</li>
- <li>Pronomes, preposições, conjunções, nomes próprios, palavrões e termos técnicos ficam de fora.</li>
+ <li>Preposições e conjunções valem (<i>para</i>, <i>porque</i>). Pronomes, nomes próprios, estrangeirismos e palavrões ficam de fora.</li>
+ <li><b>Palavras extras:</b> termos técnicos e palavras menos comuns também valem e somam pontos, mas não contam para completar a colmeia nem aparecem nas respostas.</li>
  <li>Palavras de 4 letras valem 1 ponto; as maiores valem 1 ponto por letra. O <b>pangrama</b>, que usa as 7 letras, vale 7 a mais. Palavras com <b>8 letras ou mais</b> ganham +3.</li>
  <li><b>Combo:</b> acertou outra palavra em até 12 segundos? Ela vale em dobro, depois o triplo, até x5.</li>
  <li><b>Diário:</b> três desafios novos por dia (manhã, tarde e noite), iguais para todo mundo. O botão ◐ liga e desliga o modo escuro. <b>Relâmpago:</b> 75 segundos, cada acerto dá mais tempo. <b>Livre:</b> quantos desafios quiser, sem repetir os diários.</li>
@@ -575,11 +587,11 @@ function siteUrl(){try{if(/^https?:$/.test(location.protocol)&&/\.github\.io$/.t
 function shareText(){
   const pg=[...P.pangrams].filter(w=>S.found.includes(w)).length, stars=pg?" "+"⭐".repeat(pg):"", full=S.found.length===P.list.length;
   if(S.mode==="relampago"){const p=base()+S.bonus;
-    return `Colmeia Relâmpago ⚡ ${p} pts\n${S.found.length} palavra${S.found.length===1?"":"s"}${stars}\nConsegue mais? ${siteUrl()}?c=${P.code}&m=relampago&p=${p}`}
+    return `Colmeia Relâmpago ⚡ ${p} pts\n${S.found.length} palavra${S.found.length===1?"":"s"}${extraTxt()}${stars}\nConsegue mais? ${siteUrl()}?c=${P.code}&m=relampago&p=${p}`}
   let g="";const ri=rankIndex();for(let i=1;i<=7;i++)g+=i<=ri?"🟨":i===7&&full?"🍯":"⬜";
   const date=new Date().toLocaleDateString("pt-BR",{day:"2-digit",month:"2-digit"});
   const extra=(S.hintsUsed?` · ${S.hintsUsed} dica${S.hintsUsed>1?"s":""}`:"")+(S.gaveUp?" · respostas vistas":"");
-  return `${S.mode==="diario"?`Colmeia ${date} · ${DNAMES[S.k]}`:"Colmeia Livre"}\n${rankName()} ${g}${stars}\n${S.found.length}/${P.list.length} palavras · ${base()} pts${extra}\nJogue este desafio: ${siteUrl()}?c=${P.code}`;
+  return `${S.mode==="diario"?`Colmeia ${date} · ${DNAMES[S.k]}`:"Colmeia Livre"}\n${rankName()} ${g}${stars}\n${S.found.length}/${P.list.length} palavras${extraTxt()} · ${base()} pts${extra}\nJogue este desafio: ${siteUrl()}?c=${P.code}`;
 }
 async function share(){
   const txt=shareText();

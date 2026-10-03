@@ -39,3 +39,7 @@ reformar recitar reiniciar interagir
 
 # Singulares terminados em s (não são plural)
 país através atrás simples tênis vírus cais caos adeus bônus oásis
+
+# Preposições e conjunções (spec 011)
+para pelo pela quando porque embora após porém senão contudo todavia entretanto portanto enquanto durante perante desde
+sobre entre contra conforme mediante segundo numa duma daqui dali

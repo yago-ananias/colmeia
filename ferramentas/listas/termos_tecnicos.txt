@@ -1,0 +1,32 @@
+# Termos técnicos e científicos que DEVEM valer no jogo (spec 011): na lista principal ou como palavra extra.
+# Uma ou mais por linha, com acento. Linhas com # são comentários.
+# O diagnóstico ignora as que não cabem em nenhuma colmeia (menos de 4 letras ou mais de 7 letras diferentes).
+
+# Biologia e medicina
+fotossíntese neurônio enzima molécula hormônio bactéria genoma cromossomo sinapse plaqueta hemácia leucócito insulina antígeno
+membrana ribossomo clorofila xilema floema mitose meiose gameta zigoto embrião placenta tendão fêmur tíbia úmero clavícula
+pâncreas esôfago traqueia laringe faringe alvéolo anemia artrite tendinite sinusite gastrite hepatite antibiótico anestesia
+biópsia placebo glicose lipídio aminoácido endócrino tireoide hipófise córtex axônio dendrito glândula linfócito
+anafilaxia apneia dispneia disfagia dislexia afasia alopecia arritmia bradicardia
+
+# Química e física
+átomo elétron próton nêutron isótopo fóton oxidação catálise solvente soluto polímero monômero alcalino titulação entalpia
+isômero etanol metano butano propano benzeno tolueno amônia ozônio nitrogênio carbono oxigênio sódio potássio cálcio lítio
+urânio plutônio inércia torque vetor escalar ampère caloria refração difração reflexão espectro prisma fissão radiação adiabático
+
+# Matemática e computação
+teorema polinômio matriz axioma tangente cosseno parábola elipse derivada equação fatorial mediana variância binário decimal
+divisor múltiplo vértice aresta poliedro cilindro secante cossecante perímetro cateto bissetriz ortocentro incentro
+protocolo roteador sintaxe variável recursão iteração compilação codificar periférico digital analógico transistor capacitor
+resistor indutor circuito
+
+# Geologia e geografia
+tectônica basalto granito quartzo calcário arenito xisto mármore erosão latitude trópico planalto planície istmo tsunami
+monção bioma caatinga tundra taiga estepe sismo
+
+# Direito e economia
+inflação deflação tributo alíquota debênture liquidez passivo balanço auditoria liminar acórdão petição usucapião comodato
+enfiteuse quinquênio pecúlio penhora
+
+# Áreas de estudo
+enologia etiologia filologia fonologia citologia dicotomia

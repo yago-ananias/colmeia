@@ -3,10 +3,12 @@
 #   - só verbos no infinitivo (formas conjugadas saem)
 #   - sem plurais
 #   - masculino e feminino valem (aluno e aluna)
-#   - sem pronomes, preposições e conjunções; sem palavrões, nomes próprios e estrangeirismos
+#   - sem pronomes, palavrões, nomes próprios e estrangeirismos (preposições e conjunções valem desde a spec 011)
+# Também monta extras.json (spec 011): termos técnicos, científicos e palavras raras que o dicionário conhece.
+# Elas valem e pontuam no jogo, mas não entram nas respostas dos desafios.
 # Classificação: 1º pelos treebanks UD do português (como a palavra aparece em textos anotados, ver ud_stats.py);
 # 2º, para palavras que não aparecem lá, pelo lematizador simplemma + dicionários.
-import unicodedata, json, re, csv, os
+import unicodedata, json, re, csv, os, collections
 import simplemma, functools
 from spylls.hunspell import Dictionary
 HUN=Dictionary.from_files('pt_BR')
@@ -52,9 +54,20 @@ block|=wordsfile('blocklist.txt')
 rows=list(csv.reader(open('nomes.csv',encoding='utf8')))[1:]
 rows.sort(key=lambda r:-sum(int(x or 0) for x in r[1:]))
 names={norm(r[0]).lower() for r in rows[:4000]}-wordsfile('nomes_comuns_ok.txt')   # só barra quando os textos não mostram uso comum
-func=wordsfile('funcionais.txt')
+def blocos(name):
+    """Lê um arquivo com blocos "# [x] título" e devolve {x: palavras}."""
+    b=collections.defaultdict(set); cur=None
+    for l in open(os.path.join(here,name),encoding='utf8'):
+        m=re.match(r'#\s*\[(\w+)\]',l)
+        if m: cur=m.group(1); continue
+        if not l.startswith('#') and cur: b[cur].update(l.split())
+    return b
+fb=blocos('funcionais.txt')
+func={norm(w) for w in fb['f']}                  # pronomes: "Pronomes não valem"
+func_plural={norm(w) for w in fb['p']}           # pelos, pelas, numas...: "Plural não vale"
 allow=wordsfile('nomes_comuns_ok.txt')
-force=wordsfile('permitidas.txt')   # palavras comuns que também são nomes: nunca tratadas como nome próprio
+force=wordsfile('permitidas.txt')|fb['ok']   # sempre valem: correções manuais, preposições e conjunções
+force_n={norm(w):w for w in force}             # comparado sem acento; a palavra aparece como está escrita no arquivo
 
 def singular_known(w):
     """w termina em s e alguma forma de singular existe no dicionário (casas→casa, vagens→vagem, cascavéis→cascavel)."""
@@ -118,9 +131,10 @@ for i,l in enumerate(open('freq.txt',encoding='utf8')):
     if not re.fullmatch(r'[a-z]+',n) or len(set(n))>7: continue
     if n in out: continue                      # já existe uma forma válida (ex.: faca antes de faça)
     if n in block or w in block: continue
-    if w in force: out[n]=w; rej.pop(n,None); continue
+    if n in force_n: out[n]=force_n[n]; rej.pop(n,None); continue
     if ESTRANGEIRA.search(w): continue
     if n in func: rej.setdefault(n,'f'); continue
+    if n in func_plural: rej.setdefault(n,'p'); continue
     k=classify_ud(w)
     if k!='ok' and (n in names or ((w in proper or is_proper(w)) and w not in allow)): continue
     if k is None:
@@ -130,6 +144,60 @@ for i,l in enumerate(open('freq.txt',encoding='utf8')):
     if k=='ok' and singular_known(w) and not ud_singular(w): k='p'
     if k=='ok': out[n]=w; rej.pop(n,None)
     elif k in 'pvf': rej.setdefault(n,k)
+# palavras que sempre valem mas não estão na lista de frequência (conquanto, porquanto)
+for n,w in force_n.items():
+    if n not in out and n not in block and len(n)>=4 and len(set(n))<=7 and re.fullmatch(r'[a-z]+',n): out[n]=w; rej.pop(n,None)
 print('válidas',len(out),'recusadas',len(rej),{k:sum(1 for v in rej.values() if v==k) for k in 'pvf'})
 json.dump(out,open('words.json','w',encoding='utf8'),ensure_ascii=False,separators=(',',':'))
 json.dump(rej,open('rejected.json','w',encoding='utf8'),separators=(',',':'))
+
+# ---------- palavras extras (spec 011) ----------
+# Candidatas: palavras usadas na Wikipédia em português (20+ vezes) ou nas legendas (lista completa, 5+ vezes).
+# Passam só as que o Hunspell conhece em minúscula e que seguem as mesmas regras: sem plural, sem verbo conjugado,
+# sem nome próprio, estrangeirismo, pronome ou palavrão.
+# palavrões e ofensas que o dicionário conhece (sem acento); as palavras com sentido comum (enviado, computação, abundante) passam
+OFENSIVA=re.compile(r'caralh|bucet|bocet|piroc|xoxot|xerec|punhet|pentelh|boquet|cuzao|travec|sapatao|neguinh|boiol|baitol|fiof|tribufu|mocreia|debiloide|mongoloide'
+    r'|^(puta|puto|putinh[ao]|putaria|puteir[ao]|porra|merd(a|inha|oso|osa)|fod(a|er|ido|ida|ao|ona)|bost(a|ao|ona)|viado|v[ie]adinh[ao]'
+    r'|safad(o|a|inho|inha|eza)|otari[ao]|babac(a|ao|ona)|bund(a|ao|inha|ona|udo|uda)|tes(ao|udo|uda)|arrombad[ao]|escrot[ao]|cornud[ao]|chifrud[ao]'
+    r'|criou?l[ao]|brox(a|ar|ura)|furico|queng[ao]|barang[ao]|retardad[ao]|trepad[ao]|bixa|bichon[ao]|bugr[ae]|mulat[ao])$')
+# grafias de nomes científicos e de outras línguas (cerevisiae, bacillus, mellitus, chauffeur, inputs)
+LATIM=re.compile(r'(ae|ii|ium|orum|arum|alis|ilis|oris|itis|ensis|icans)$|ll|tt|pp|ff|bb|dd|gg|mm|nn|zz|sch|ph|rh|[bdgt]s$|[^e]ps$')
+# derivados de verbo que são substantivos ou adjetivos (oxidado, oxidante, oxidável, oxidação)
+DERIVADO=re.compile(r'(ado|ada|ido|ida|dor|dora|ção|mento|vel|ante|ente|inte)$')
+dic_n={norm(x) for x in dic}
+def extra_ok(w,n):
+    if n in out or n in rej or n in block or w in block or n in func or n in func_plural: return False
+    if ESTRANGEIRA.search(w) or OFENSIVA.search(n) or n in names: return False
+    if LATIM.search(w) or (w.endswith('us') and w==n and not w.endswith('deus')): return False   # bacillus sai, vírus e semideus ficam
+    if w in proper or is_proper(w): return False
+    k=classify_ud(w)
+    if k is not None and k!='ok': return False
+    if not HUN.lookup(w): return False
+    if k is None:   # sem dados nos treebanks (sismo e penhora têm, e lá são substantivos): o dicionário decide
+        stems=[f.stem for f in HUN.lookuper.good_forms(w)]
+        if not any(st==w or not VERBO.search(st) for st in stems) and not DERIVADO.search(w):   # só forma de verbo
+            if not FORMA_VERBAL.search(w) and not any(st in freqset for st in stems): so_verbo.append(w)
+            return False
+    # formas de verbo que o dicionário lista como palavra própria (erodindo, deságuam, éreis) e plurais em -eis (versáteis)
+    if re.search(r'(armos|ermos|irmos|arem|erem|irem|ando|endo|indo|eis)$',w) or (w.endswith('am') and not re.search(r'(zolam|zepam)$',w)): return False
+    if singular_known(w) and not ud_singular(w): return False
+    if w.endswith('eses') and known(w[:-4]+'ês'): return False   # libaneses ← libanês
+    if w.endswith('ens') and norm(w[:-1]) in dic_n: return False  # hifens ← hífen, germens ← gérmen
+    return True
+cand={}
+for fn,minimo in (('ptwiki.txt',20),('freq_full.txt',5)):
+    if not os.path.exists(fn): continue
+    for l in open(fn,encoding='utf8'):
+        p=l.split()
+        if len(p)!=2 or not p[1].isdigit(): continue
+        w=p[0]
+        if int(p[1])<minimo: break               # as listas vêm em ordem de frequência
+        if len(w)<4 or w in cand or not re.fullmatch(r'[a-zà-ü]+',w): continue
+        n=norm(w)
+        if re.fullmatch(r'[a-z]+',n) and len(set(n))<=7: cand[w]=n
+extras={}; so_verbo=[]
+for w,n in cand.items():
+    if n not in extras and extra_ok(w,n): extras[n]=w
+print('extras',len(extras),'de',len(cand),'candidatas')
+open('extras_so_verbo.txt','w',encoding='utf8').write('\n'.join(so_verbo))   # revisão: o dicionário só conhece como forma de verbo pouco usado (linfa ← linfar)
+json.dump(extras,open('extras.json','w',encoding='utf8'),ensure_ascii=False,separators=(',',':'))
