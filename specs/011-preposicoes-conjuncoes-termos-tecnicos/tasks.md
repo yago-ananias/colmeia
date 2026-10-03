@@ -7,3 +7,4 @@
 - [X] T005 [US2] `template.html`: aceitar, pontuar, listar, salvar e compartilhar extras
 - [X] T006 [US1] Aviso "Pronomes não valem" e ajuda atualizada
 - [X] T007 Testes (`test.js`, `diagnostico.py`, listas), REGRAS.md, gerar e publicar no Artifact; site depois da confirmação de YAGO
+- [X] T008 Sete palavras vulgares que já estavam na lista principal saem (boquete, pica, bichona, gostosona, peituda, bundão, cornudo); YAGO escolheu "Tirar" no cartão
