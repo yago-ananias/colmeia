@@ -17,7 +17,7 @@ const shareId = SHARE.includes("/share/") ? SHARE.split("/share/")[1].split(/[/?
 
 const erros = [];
 async function get(path, token) {
-  const r = await fetch(BASE + path, { headers: token ? { "x-umami-share-token": token, accept: "application/json" } : { accept: "application/json" } });
+  const r = await fetch(BASE + path, { headers: token ? { "x-umami-share-token": token, "x-umami-share-context": "1", accept: "application/json" } : { accept: "application/json" } });
   if (!r.ok) throw new Error(`${r.status} em ${path.split("?")[0]}`);
   return r.json();
 }
