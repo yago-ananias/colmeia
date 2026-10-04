@@ -12,7 +12,7 @@ Quem usa só o teclado navega com Tab, aciona qualquer botão com Enter ou Espa�
 O leitor usa voz em português, anuncia a palavra sendo digitada ("Palavra: O B R E") e diz qual palavra foi aceita ou recusada.
 
 ## Requirements
-- **FR-001**: Enter e Espaço com foco de teclado num botão acionam o botão; fora disso continuam enviando e embaralhando (item 1).
+- **FR-001**: Enter e Espaço com foco de teclado num botão acionam o botão; fora disso continuam enviando e embaralhando (item 1). *(O mecanismo mudou na spec 013: em vez de `:focus-visible`, vale o foco que chegou por Tab sem nada digitado depois; o requisito é o mesmo.)*
 - **FR-002**: Janelas deixam o jogo por trás inerte, têm nome (`aria-labelledby` no título) e devolvem o foco ao fechar (item 2).
 - **FR-003**: Letra da colmeia com foco de teclado fica roxa; a central ganha sublinhado (item 3).
 - **FR-004**: `lang="pt-BR"` (item 4).

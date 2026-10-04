@@ -1,5 +1,6 @@
 <!--
 Sync Impact Report
+Version: 1.2.0 → 1.2.1 (2026-10-04, spec 016, correção da auditoria): PATCH. Princípio V registra a exceção dos dias já publicados (spec 008, FR-007).
 Version: 1.1.0 → 1.2.0 (2026-10-04, auditoria Spec Kit, decisão de YAGO "emendar"): MINOR.
   - Princípios I e II: ganham a camada das palavras extras (spec 011), que pontuam mas ficam fora do que conta como resposta do desafio.
   - Princípio III: a exceção cobre também o envio de erros sem dado pessoal (specs 010 e 012), além da medição de uso (spec 009).
@@ -53,8 +54,10 @@ nos temas claro e escuro. Animações respeitam "reduzir movimento" e o foco do 
 
 ### V. Testado antes de publicar
 Toda mudança na lógica (validação de palavras, pontuação, sorteio dos desafios, persistência) passa
-pelo teste automatizado em `ferramentas/test.js` antes de publicar. Todo desafio publicado tem entre
-22 e 65 palavras e pelo menos um pangrama.
+pelo teste automatizado em `ferramentas/test.js` antes de publicar. Todo desafio do Livre e dos
+dias futuros tem entre 22 e 65 palavras e pelo menos um pangrama. Dias que já foram ao ar ficam fixos mesmo
+que a lista mude (spec 008) e só precisam de pangrama e 15 palavras ou mais; o teste informa quantos saíram
+da faixa 22 a 65.
 
 ## Restrições Técnicas
 
@@ -75,4 +78,4 @@ Esta constituição vale acima de qualquer outra prática do projeto. Mudanças 
 arquivo, subir a versão (MAJOR para remover ou redefinir princípio, MINOR para adicionar, PATCH para
 ajuste de texto) e conferir se specs e planos abertos continuam de acordo.
 
-**Version**: 1.2.0 | **Ratified**: 2026-10-02 | **Last Amended**: 2026-10-04
+**Version**: 1.2.1 | **Ratified**: 2026-10-02 | **Last Amended**: 2026-10-04

@@ -29,7 +29,7 @@ o progresso fica no `localStorage`.
 
 **Constraints**: página única abaixo de 1 MB; sem servidor; funciona sem `localStorage`
 
-**Scale/Scope**: ~10 mil palavras, 6.399 desafios (cerca de 5 anos de diários com 3 por dia)
+**Scale/Scope**: em 02/10: ~10 mil palavras, 6.399 desafios (cerca de 5 anos de diários com 3 por dia). Em 04/10 (specs 008 e 011): cerca de 11.550 palavras, 14.900 extras, 7.935 desafios (4.902 de diários, 1.634 dias, e 3.033 do Livre)
 
 ## Constitution Check
 
@@ -37,7 +37,7 @@ o progresso fica no `localStorage`.
 |-----------|---------------------|--------|
 | I. Regra do jogo | `buildPuzzle` e `submit` validam só pela regra base; combos e dicas não alteram a validade | ✅ |
 | II. Português | Lista = dicionário ∩ 40 mil palavras mais frequentes, com filtro de palavrões e `blocklist.txt` | ✅ |
-| III. Um arquivo | `colmeia.html` gerado com os dados embutidos (~210 KB); todo acesso ao storage em try/catch | ✅ |
+| III. Um arquivo | `colmeia.html` gerado com os dados embutidos (~210 KB na 001; cerca de 630 KB hoje, ainda abaixo de 1 MB); todo acesso ao storage em try/catch | ✅ |
 | IV. Dinâmico e acessível | Layout responsivo, tokens de cor para claro/escuro, `prefers-reduced-motion`, teclado | ✅ |
 | V. Testado | `ferramentas/test.js` cobre dados, regra, pontuação, diários e telas | ✅ |
 

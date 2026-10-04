@@ -28,4 +28,4 @@ O "Painel da Colmeia" ganha um cartão "Saúde do jogo": site no ar, última ver
 
 ## Success Criteria
 - **SC-001**: `test.js` confere captura de erro ao abrir, erro jogando, promessa, armazenamento; ignora erros de fora; limites; sem laço com Umami quebrado; nada sem a tag; nada de dado pessoal.
-- **SC-002**: A verificação passa contra o site local e falha num site quebrado de propósito.
+- **SC-002**: A verificação passa contra o site local e falha num site quebrado de propósito. Provado à mão em 03/10/2026; não é automático porque a verificação confere ícones e manifesto que só existem no repositório (ver `ferramentas/medicoes/LEIAME.md`).

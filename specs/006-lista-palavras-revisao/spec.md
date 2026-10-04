@@ -20,4 +20,4 @@ O jogador digita palavras comuns (*abelha, rainha, leão, sopa, suco, tesouro, a
 
 ## Success Criteria
 - **SC-001**: 285/285 e 252/252 no diagnóstico.
-- **SC-002**: Desafios continuam com 22 a 65 palavras e ao menos um pangrama.
+- **SC-002**: Desafios continuam com 22 a 65 palavras e ao menos um pangrama. *(Vale para o Livre e para os dias futuros; dias já publicados ficam fixos, spec 008 FR-007.)*

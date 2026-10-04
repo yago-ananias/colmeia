@@ -16,7 +16,7 @@ Tudo abaixo vem do código do jogo (`template.html`).
 - Palavra repetida não conta de novo.
 - Mensagens de erro: "Muito curta", "Falta a letra central", "Já encontrada", "Plural não vale", "Só verbos no infinitivo", "Pronomes não valem", "Não está na lista". Letra fora da colmeia nem entra (a palavra treme).
 - **Pangrama** é a palavra que usa as 7 letras. Todo desafio tem pelo menos um.
-- Cada desafio tem entre 22 e 65 palavras.
+- Cada desafio do Livre e dos dias futuros tem entre 22 e 65 palavras. Dias que já foram ao ar ficam como estão, mesmo que a lista de palavras mude (têm pelo menos 15 palavras).
 
 ## Palavras extras (spec 011)
 - Termos técnicos e científicos e palavras menos comuns que o dicionário conhece (*sinapse*, *entalpia*, *usucapião*, *bissetriz*) valem como **palavra extra**. O aviso é "Palavra extra! +N".

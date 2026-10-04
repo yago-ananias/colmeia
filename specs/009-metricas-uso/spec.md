@@ -36,8 +36,10 @@ YAGO (2026-10-03): "tenho que montar isso lá no umami? queria ver tudo por aqui
 
 ## Success Criteria
 - **SC-001**: `test.js` confere que, com o script presente, os eventos saem com as propriedades certas; e que, sem ele, nada é enviado e não há erro.
-- **SC-002**: Depois de ligado, YAGO vê visitantes e eventos no painel do Umami no mesmo dia.
+- **SC-002**: Depois de ligado, YAGO vê visitantes e eventos no mesmo dia, no painel da Colmeia (Artifact, US4) e no próprio Umami.
+- **SC-003** (US2): o painel da Colmeia mostra partidas por modo e desafio, níveis alcançados, pangramas, colmeias completas, dicas, desistências, compartilhamentos e sugestões, com os mesmos números do Umami. Conferido à mão na publicação (tarefas T009 e T010).
+- **SC-004** (US4): YAGO abre o Artifact e vê os números sem montar nada no Umami; os dados vêm de `metricas.json`, atualizado uma vez por dia (e pelo botão "Atualizar" do painel). Conferido à mão.
 
 ## Assumptions
-- O painel do próprio Umami basta (Visão geral, Eventos com propriedades, Funil, Retenção). Painel próprio só se faltar algo.
+- O painel do próprio Umami serve para detalhes (Visão geral, Eventos com propriedades, Funil, Retenção), mas o painel principal passou a ser o da Colmeia, no projeto (US4 e FR-007), a pedido de YAGO.
 - Criar a conta no Umami é com YAGO; o ID do site é público (aparece no HTML) e vai em `ferramentas/site.sh`.

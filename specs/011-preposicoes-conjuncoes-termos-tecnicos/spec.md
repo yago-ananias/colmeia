@@ -2,7 +2,7 @@
 
 **Feature Branch**: `011-preposicoes-conjuncoes-termos-tecnicos`
 **Created**: 2026-10-03
-**Status**: Implemented
+**Status**: Implemented. Amparada pelos princípios I e II da constituição v1.2.0 (camada das palavras extras).
 **Input**: YAGO (03/10/2026): "Alterações: hoje não são válidas preposições, conjunções e termos técnicos. Gerar uma correção para ser aceito essas 3. Tornar válidos preposições, conjunções e termos técnicos no jogo". No cartão de decisão, YAGO escolheu "Palavra extra" para os termos técnicos.
 
 ## User Story 1 - Preposições e conjunções valem (P1)
@@ -20,7 +20,7 @@ O jogador digita um termo técnico ou uma palavra menos comum que o dicionário 
 - **FR-002**: `funcionais.txt` tem blocos: `[f]` pronomes (recusa "Pronomes não valem"), `[ok]` preposições e conjunções que sempre valem, `[p]` plurais de contrações.
 - **FR-003**: As extras vêm da Wikipédia em português (20+ ocorrências) e das legendas (lista completa, 5+), passam pelo Hunspell pt_BR em minúscula e seguem as regras do jogo: sem plural, verbo conjugado, nome próprio, estrangeirismo, nome científico em latim, pronome ou palavrão.
 - **FR-004**: Nenhuma extra é resposta de desafio, nem está nas recusadas; o jogo só leva as que cabem em algum desafio (diário ou Livre).
-- **FR-005**: Pontos da extra seguem a tabela normal (inclusive bônus de palavra longa e de 7 letras); elas contam para o nível.
+- **FR-005**: Pontos da extra seguem a tabela normal (inclusive o bônus de palavra longa e, quando a extra usa as 7 letras, o de pangrama). Elas contam para o nível, **de propósito**: o nível é a fração da pontuação máxima do desafio, e essa pontuação máxima só soma as palavras do desafio, sem as extras. Por isso dá para chegar a Rainha, e às conquistas "Virou Rainha" e "Guardiã sem dicas", usando principalmente extras. Decisão de YAGO em 04/10/2026 ("intencional"). As extras não contam para os 5 acertos da sequência de dias, nem para "Colmeia completa".
 - **FR-006**: Compartilhar mostra "+N extras" quando houver. Nenhuma palavra vai para a medição de uso.
 
 ## Success Criteria

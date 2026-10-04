@@ -14,3 +14,15 @@
 
 ## Testes
 - Bloco "Erros (spec 010)" em `test.js`, em contexto próprio, disparando erros por caminhos reais do jogo (armazenamento corrompido, compartilhar com data quebrada, gravação bloqueada). Desde a spec 012, progresso corrompido não gera mais erro (é descartado com aviso), e os testes provocam o erro quebrando `matchMedia` e `normalize`.
+
+## Constitution Check
+
+> Verificação feita depois, na spec 016 (auditoria do Spec Kit de 04/10/2026), contra a constituição v1.2.1.
+
+| Princípio | Status |
+|-----------|--------|
+| I. Regra do jogo: nenhuma mudança | ✅ |
+| II. Português: textos do painel em português | ✅ |
+| III. Um arquivo, zero servidor: o envio de erros usa o mesmo script opcional do site e só leva tipo, local no código, fase e modo, com limites. A exceção do princípio III cobre isso desde a v1.2.0 | ✅ (com a exceção) |
+| IV. Dinâmico e acessível: sem mudança de tela no jogo | n/a |
+| V. Testado: bloco "Erros (spec 010)" em `test.js`; a verificação diária do site (SC-002) foi provada à mão | ✅ |

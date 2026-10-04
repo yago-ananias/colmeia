@@ -6,7 +6,7 @@ Tudo em `template.html` (sem mexer em dados, regras ou lista de palavras).
 - **HTML**: `<main>`; `#timesr` (`role="status"`); `#b-sound` com `aria-pressed`; `#track` como `progressbar`; `#clues` como `ul`; `#wordsbox` (`role="group"`, `tabindex="0"`, `aria-labelledby`) envolve `#words`.
 - **JS**: `renderRank` (valores e `aria-valuetext`), `renderWords` (texto "pangrama"/"não encontrada" fora do `<span>` da palavra, para não mudar o texto dela; a palavra nova é trazida para a área visível da caixa), `renderHints` (dicas), `renderGrid` (tabela), `renderSound`, `renderStats` (obtida/não obtida), `avisaTempo()` chamada por `tick()`.
 - **Testes**: seção "Acessibilidade, itens 7 a 14 (spec 015)" em `test.js`: cada item num contexto com progresso semeado; contraste calculado das cores resolvidas; relógio de mentira (`page.clock`) para o Relâmpago.
-- **Verificação manual**: axe-core rodado numa pasta de rascunho (não entra no repositório), antes e depois.
+- **Verificação manual**: axe-core rodado antes e depois com `ferramentas/medicoes/axe.js` (guardado na spec 016; o pacote `axe-core` é instalado numa pasta de fora do projeto, não entra no jogo).
 
 ## Constitution Check
 - I. Regra do jogo: nada muda no que vale como palavra nem na pontuação.

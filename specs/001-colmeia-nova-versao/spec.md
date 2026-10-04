@@ -138,7 +138,7 @@ copiar o resultado e colar o texto.
 ### Measurable Outcomes
 
 - **SC-001**: Um jogador novo envia a primeira palavra válida em menos de 1 minuto sem ler instruções.
-- **SC-002**: 100% dos desafios disponíveis têm entre 22 e 65 palavras e pelo menos um pangrama.
+- **SC-002**: 100% dos desafios disponíveis têm entre 22 e 65 palavras e pelo menos um pangrama. *(Desde a spec 008/016: vale para o Livre e para os dias futuros; dias já publicados ficam fixos e só precisam de pangrama e 15 palavras ou mais.)*
 - **SC-003**: O jogo abre e fica jogável em menos de 2 segundos numa conexão comum.
 - **SC-004**: Nenhuma rolagem lateral em telas de 360 px a 1440 px, nos dois temas.
 - **SC-005**: Progresso dos três desafios diários é recuperado em 100% das reaberturas no mesmo dia, no mesmo navegador.
@@ -150,3 +150,14 @@ copiar o resultado e colar o texto.
 - O jogo roda no navegador (computador e celular); app nativo está fora do escopo desta versão.
 - Não há contas nem placar online; tudo fica no navegador do jogador.
 - O nome "Colmeia" substitui "Soletra" para não usar a marca do g1.
+
+## Regras base documentadas depois (spec 016)
+
+Regras que o jogo já seguia desde a 001 e que só estavam no código e em `REGRAS.md`. Nada muda para o jogador; este é o registro de especificação. Os números foram conferidos em `template.html`.
+
+- **FR-014 (níveis)**: o nível é a fração dos pontos das palavras sobre a pontuação máxima do desafio (só as palavras do desafio): Ovo 0%, Larva 3%, Pupa 8%, Operária 15%, Exploradora 25%, Guardiã 40%, Rainha 60%; "Colmeia completa" com todas as palavras do desafio.
+- **FR-015 (combo e nível)**: no Diário e no Livre o bônus de combo aparece separado ("+N combo") e não conta para o nível. No Relâmpago ele soma na pontuação final. O bônus é `pontos da palavra × (combo − 1)`, com combo x2 a x5.
+- **FR-016 (Relâmpago, tempo)**: começa com 75 s. Cada acerto soma 2 s por letra (no máximo 14 s) e o pangrama soma 12 s. Cada dica custa 5 s e só pode ser pedida com mais de 6 s no relógio. O relógio para com a aba oculta e com qualquer janela aberta.
+- **FR-017 (Relâmpago, desafio)**: o desafio sorteado vem do `LIVRE` e tem pelo menos 35 palavras (`pickRich`).
+- **FR-018 (conquistas)**: sete conquistas: Primeiro pangrama, Combo x5, Virou Rainha, 100 pts no Relâmpago, 3 dias seguidos, Guardiã sem dicas (chegar a Guardiã sem dicas e sem ver respostas) e Colmeia completa.
+- **FR-019 (sequência de dias)**: o dia conta quando o jogador acha 5 palavras do desafio em um desafio diário; palavras extras (spec 011) não contam; pular um dia zera a sequência.

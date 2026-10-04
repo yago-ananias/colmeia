@@ -4,7 +4,7 @@
 
 **Created**: 2026-10-02
 
-**Status**: Implemented
+**Status**: Implemented. Em parte substituída pela spec 011 (preposições e conjunções valem; termos técnicos entram como palavra extra) e pela spec 016 (tamanho dos dias já publicados). Os trechos substituídos estão marcados abaixo.
 
 **Input**: User description: "No Soletra original do g1: letras podem ser usadas mais de uma vez; algumas palavras não estão listadas (termos científicos, jargões, palavras ofensivas, determinados pronomes, preposições e conjunções); somente verbos no infinitivo são válidos; ambos os gêneros são válidos; plurais não são válidos. Implementar as que faltam e propor novas."
 
@@ -22,7 +22,7 @@ masculino ou feminino.
 1. **Given** um verbo conjugado com as letras do desafio, **When** o jogador envia, **Then** aparece "Só verbos no infinitivo" e nada conta.
 2. **Given** um plural, **When** o jogador envia, **Then** aparece "Plural não vale".
 3. **Given** a forma feminina de uma palavra válida (aluna, bonita, leoa), **When** o jogador envia, **Then** ela vale.
-4. **Given** um pronome, preposição ou conjunção, **When** o jogador envia, **Then** aparece "Pronomes, preposições e conjunções não valem".
+4. **Given** um pronome, preposição ou conjunção, **When** o jogador envia, **Then** aparece "Pronomes, preposições e conjunções não valem". *(Substituído pela spec 011: só pronomes e contrações com pronome seguem recusados, com o aviso "Pronomes não valem"; preposições e conjunções valem.)*
 
 ### User Story 2 - Regras visíveis (Priority: P2)
 
@@ -43,18 +43,18 @@ O jogador encontra essas regras em "Como jogar".
 - **FR-001**: O jogo MUST recusar verbos conjugados e aceitar verbos no infinitivo.
 - **FR-002**: O jogo MUST recusar plurais.
 - **FR-003**: O jogo MUST aceitar masculino e feminino da mesma palavra.
-- **FR-004**: O jogo MUST recusar pronomes, preposições, conjunções e suas contrações.
+- **FR-004**: O jogo MUST recusar pronomes, preposições, conjunções e suas contrações. *(Substituído pela spec 011: a recusa vale só para pronomes e contrações com pronome.)*
 - **FR-005**: O jogo MUST dizer o motivo da recusa (plural, verbo conjugado, classe gramatical) quando souber.
-- **FR-006**: Todos os desafios MUST continuar com 22 a 65 palavras e pelo menos um pangrama.
+- **FR-006**: Todos os desafios MUST continuar com 22 a 65 palavras e pelo menos um pangrama. *(Com a exceção da spec 008/016: dias já publicados ficam fixos e só precisam de pangrama e 15 palavras ou mais.)*
 
 ## Success Criteria *(mandatory)*
 
 - **SC-001**: Nenhuma palavra válida do jogo é plural ou verbo conjugado nos testes automáticos.
-- **SC-002**: aluno, aluna, correr, jogar e laranja valem; laranjas, correu, jogou, casas, porque e eles não valem.
+- **SC-002**: aluno, aluna, correr, jogar e laranja valem; laranjas, correu, jogou, casas e eles não valem. *("porque" passou a valer na spec 011.)*
 - **SC-003**: O jogador entende por que a palavra foi recusada em 100% dos casos de plural, verbo e palavra funcional conhecidos.
 
 ## Assumptions
 
 - A classificação é automática (lematizador simplemma) mais listas manuais; alguns casos ambíguos podem escapar e serão corrigidos pela `blocklist.txt` quando aparecerem.
 - Repetir letras e ignorar acentos já existiam e continuam iguais.
-- Termos científicos e jargões continuam filtrados pela lista de frequência (só entram as palavras mais usadas da língua).
+- Termos científicos e jargões continuam filtrados pela lista de frequência (só entram as palavras mais usadas da língua). *(Desde a spec 011 eles valem como palavra extra: pontuam, mas não são resposta do desafio.)*

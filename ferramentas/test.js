@@ -41,21 +41,31 @@ const ok = (cond, msg) => { console.log((cond ? "  ok   " : "  FALHOU ") + msg);
     const bit = c => 1 << (c.charCodeAt(0) - 97);
     const masks = WORDS.map(w => [...w].reduce((m, c) => m | bit(c), 0));
     const today = Math.round((new Date(new Date().getFullYear(), new Date().getMonth(), new Date().getDate()) - new Date(2026, 9, 1)) / 864e5) + 1;
-    let bad = 0, min = 1e9, max = 0;
-    // dias que já foram ao ar ficam fixos mesmo que a lista mude: só precisam ter pangrama e pelo menos 15 palavras
-    const check = (code, strict) => {
+    // Livre e dias futuros seguem a regra da constituição (22 a 65 palavras e pangrama).
+    // Dias que já foram ao ar ficam fixos mesmo que a lista mude (spec 008, FR-001): só precisam ter pangrama e
+    // pelo menos 15 palavras. Contamos quantos já saíram da faixa 22 a 65 para a mudança de lista não passar em silêncio.
+    let bad = 0, min = 1e9, max = 0, pubBad = 0, pubFora = 0, pubN = 0, pubMin = 1e9, pubMax = 0;
+    const check = (code, publicado) => {
       const M = [...code].reduce((m, c) => m | bit(c), 0), cb = bit(code[0]);
       let n = 0, pg = 0;
       masks.forEach(m => { if ((m & ~M) === 0 && (m & cb)) { n++; if (m === M) pg++; } });
-      if (new Set(code).size !== 7 || pg < 1 || (strict ? n < 22 || n > 65 : n < 15)) bad++;
-      if (strict) { min = Math.min(min, n); max = Math.max(max, n); }
+      const letrasOk = new Set(code).size === 7 && pg >= 1;
+      if (publicado) {
+        pubN++; pubMin = Math.min(pubMin, n); pubMax = Math.max(pubMax, n);
+        if (!letrasOk || n < 15) pubBad++;
+        if (n < 22 || n > 65) pubFora++;
+      } else {
+        if (!letrasOk || n < 22 || n > 65) bad++;
+        min = Math.min(min, n); max = Math.max(max, n);
+      }
     };
-    LIVRE.forEach(c => check(c, true)); DAYS.forEach((c, i) => check(c, i >= (today + 2) * 3));
+    LIVRE.forEach(c => check(c, false)); DAYS.forEach((c, i) => check(c, i < (today + 2) * 3));
     const key = c => [...c].sort().join(""), ds = new Set(DAYS.map(key));
-    return { words: WORDS.length, puz: DAYS.length + LIVRE.length, days: DAYS.length / 3, livre: LIVRE.length, bad, min, max,
+    return { words: WORDS.length, puz: DAYS.length + LIVRE.length, days: DAYS.length / 3, livre: LIVRE.length, bad, min, max, pubBad, pubFora, pubN, pubMin, pubMax,
       overlap: LIVRE.filter(c => ds.has(key(c))).length, pinned: DAYS.slice(3, 6).join(","), size: document.documentElement.outerHTML.length };
   });
-  ok(data.bad === 0, `${data.puz} desafios, todos com 7 letras, 22–65 palavras e pangrama (min ${data.min}, max ${data.max})`);
+  ok(data.bad === 0, `${data.puz - data.pubN} desafios do Livre e dos dias futuros, todos com 7 letras, 22–65 palavras e pangrama (min ${data.min}, max ${data.max})`);
+  ok(data.pubBad === 0 && data.pubN > 0, `${data.pubN} desafios de dias já publicados, todos com pangrama e 15 palavras ou mais (min ${data.pubMin}, max ${data.pubMax}; ${data.pubFora} fora de 22–65, programação fixa)`);
   ok(data.overlap === 0, `${data.days} dias de diários e ${data.livre} desafios no Livre, sem conjunto de letras em comum (spec 008)`);
   ok(data.pinned === "obeilrs,dceiort,caeintv", "diários de 02/10/2026 continuam os mesmos (programação fixa em diarios.txt)");
   ok(data.words > 5000, `${data.words} palavras na lista`);
@@ -446,8 +456,17 @@ const ok = (cond, msg) => { console.log((cond ? "  ok   " : "  FALHOU ") + msg);
   await p.emulateMedia({ colorScheme: "dark" });
   const darkBg = await bg();
   ok(lightBg !== darkBg, `segue o tema do aparelho (${lightBg} → ${darkBg})`);
+  // spec 005 US1 / spec 016: a assinatura do cabeçalho troca de versão com o tema (só uma visível, com tamanho e texto alternativo)
+  const logo = () => p.evaluate(() => {
+    const v = c => { const e = document.querySelector(".brand ." + c); return !!e && getComputedStyle(e).display !== "none" && e.getBoundingClientRect().height > 0 && !!e.alt; };
+    return { claro: v("lg-l"), escuro: v("lg-d") };
+  });
+  const logoEscuro = await logo();
+  ok(!logoEscuro.claro && logoEscuro.escuro, `tema escuro mostra só a assinatura escura do cabeçalho (${JSON.stringify(logoEscuro)})`);
   await p.click("#b-theme");
   ok((await p.evaluate(() => document.documentElement.dataset.theme)) === "light", "botão troca para claro mesmo com aparelho escuro");
+  const logoClaro = await logo();
+  ok(logoClaro.claro && !logoClaro.escuro, `tema claro mostra só a assinatura clara do cabeçalho (${JSON.stringify(logoClaro)})`);
   await p.reload(); await p.waitForTimeout(300);
   ok((await bg()) === lightBg, "escolha de tema salva após recarregar");
   await p.click("#b-theme");

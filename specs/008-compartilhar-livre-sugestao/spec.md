@@ -23,6 +23,7 @@ Quando o jogo recusa uma palavra de 4 letras ou mais com a letra central (fora d
 - **FR-004**: Compartilhar usa o menu do celular quando existe; senão copia; se nada funcionar, mostra o texto para copiar.
 - **FR-005**: O link aponta para o site (https://yago-ananias.github.io/colmeia/).
 - **FR-006**: A sugestão abre `github.com/yago-ananias/colmeia/issues/new` com título "Sugestão de palavra: <palavra>" e o motivo da recusa.
+- **FR-007** (registrado na spec 016): a regra "22 a 65 palavras e pelo menos um pangrama" da constituição vale para o Livre e para os dias futuros. Os dias já publicados ficam fixos (FR-001) e só precisam ter pangrama e 15 palavras ou mais, sem máximo: uma mudança na lista de palavras não pode alterar um dia que os jogadores já viram. `test.js` confere as duas regras em separado e informa quantos dias publicados saíram da faixa 22 a 65 (hoje, nenhum).
 
 ## Success Criteria
 - **SC-001**: `test.js` cobre as três histórias e passa.

@@ -18,4 +18,4 @@ Tocar rápido nas letras, inclusive repetindo a mesma, digita cada letra na hora
 
 ## Success Criteria
 - **SC-001**: `test.js` confere a propriedade nas letras e nos botões principais.
-- **SC-002**: Se o jogador ainda notar lentidão, saber o aparelho e o navegador dele para medir lá.
+- **SC-002**: Do toque até a letra aparecer leva no máximo 50 ms com a CPU 4x mais lenta (medido: cerca de 18 ms, nas 6 versões; `ferramentas/medicoes/toque.js`, medição manual). O gesto de toque duplo do Safari no iPhone não dá para medir aqui: se o jogador ainda notar lentidão, perguntar o aparelho e o navegador dele.
