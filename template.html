@@ -45,8 +45,10 @@ header{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
 .dailies button{border:1px solid var(--line);background:var(--panel);border-radius:12px;padding:6px 12px;display:flex;flex-direction:column;align-items:center;line-height:1.2;min-width:92px}
 .dailies button b{font-family:var(--display);font-size:.92rem}
 .dailies button small{font-size:.72rem;color:var(--muted)}
-.dailies button[aria-pressed="true"]{border-color:var(--honey);box-shadow:inset 0 0 0 1px var(--honey)}
-.iconbtn{border:1px solid var(--line);background:var(--panel);width:36px;height:36px;border-radius:50%;display:grid;place-items:center;font-weight:700}
+.dailies button[aria-pressed="true"]{border-color:var(--honey-text);box-shadow:inset 0 0 0 1px var(--honey-text)}   /* spec 015: --honey tem só 2:1 sobre o painel claro */
+.iconbtn{border:1px solid var(--line);background:var(--panel);width:36px;height:36px;border-radius:50%;display:grid;place-items:center;font-weight:700;position:relative}
+.iconbtn.off{color:var(--muted)}
+.iconbtn.off::after{content:"";position:absolute;left:8px;right:8px;top:50%;height:2px;margin-top:-1px;background:currentColor;transform:rotate(-45deg)}   /* som desligado: ícone riscado, não só mais fraco */
 .main{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,380px);gap:22px;align-items:start}
 .play{display:flex;flex-direction:column;align-items:center;gap:14px;min-width:0}
 .side{display:flex;flex-direction:column;gap:14px;min-width:0}
@@ -59,10 +61,10 @@ header{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
 .pts b{color:var(--ink);font-size:1.15rem}
 .track{position:relative;height:26px;margin-top:10px}
 .track::before{content:"";position:absolute;left:0;right:0;top:12px;height:2px;background:var(--line)}
-.fill{position:absolute;left:0;top:11px;height:4px;background:var(--honey);border-radius:2px;transition:width .5s}
+.fill{position:absolute;left:0;top:11px;height:4px;background:var(--honey-text);border-radius:2px;transition:width .5s}
 .dot{position:absolute;top:8px;width:10px;height:10px;margin-left:-5px;border-radius:50%;background:var(--line)}
-.dot.on{background:var(--honey)}
-.dot.cur{width:24px;height:24px;top:1px;margin-left:-12px;background:var(--honey);color:var(--honey-ink);font-size:.7rem;font-weight:700;display:grid;place-items:center;font-variant-numeric:tabular-nums}
+.dot.on{background:var(--honey-text)}
+.dot.cur{width:24px;height:24px;top:1px;margin-left:-12px;background:var(--honey);box-shadow:0 0 0 2px var(--honey-text);color:var(--honey-ink);font-size:.7rem;font-weight:700;display:grid;place-items:center;font-variant-numeric:tabular-nums}
 .sub{font-size:.82rem;color:var(--muted);margin-top:4px}
 /* combo / timer */
 .hud{display:flex;gap:10px;width:100%;max-width:440px;align-items:center;min-height:34px}
@@ -70,8 +72,8 @@ header{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
 .timer span{display:block;height:100%;background:var(--plum);transition:width .25s linear}
 .timer.low span{background:var(--bad)}
 .clock{font-family:var(--display);font-weight:800;font-variant-numeric:tabular-nums;font-size:1.25rem;min-width:3.2ch;text-align:right}
-.combo{display:flex;align-items:center;gap:8px;padding:4px 12px 4px 4px;border-radius:999px;background:var(--plum-soft);color:var(--plum);font-weight:700;font-size:.85rem;opacity:.45;transition:opacity .2s}
-.combo.live{opacity:1}
+.combo{display:flex;align-items:center;gap:8px;padding:4px 12px 4px 4px;border-radius:999px;background:var(--plum-soft);color:var(--ink);font-weight:700;font-size:.85rem;transition:color .2s}
+.combo.live{color:var(--plum)}   /* parado só muda de cor: a opacidade derrubava o texto para 2,3:1 */
 .combo .ring{width:26px;height:26px;border-radius:50%;display:grid;place-items:center;background:conic-gradient(var(--plum) calc(var(--p,0)*1turn),transparent 0);position:relative}
 .combo .ring::after{content:attr(data-x);position:absolute;inset:3px;border-radius:50%;background:var(--plum-soft);display:grid;place-items:center;font-size:.72rem}
 .combo.bump{animation:pop .35s}
@@ -107,10 +109,14 @@ a:focus-visible{outline:3px solid var(--plum);outline-offset:2px}
 /* found */
 .foundhead{display:flex;justify-content:space-between;align-items:center;gap:8px}
 .foundhead h2,.card h2{font-family:var(--display);font-size:1rem;margin:0;font-weight:700}
-.words{list-style:none;padding:0;margin:10px 0 0;columns:2;column-gap:18px;max-height:260px;overflow:auto}
+.wordsbox{margin-top:10px;max-height:260px;overflow:auto}   /* quem rola é a caixa: colunas com altura máxima viravam colunas extras para a direita e escondiam palavras */
+.wordsbox:focus-visible{outline:3px solid var(--plum);outline-offset:2px}   /* rola, então precisa de foco de teclado */
+.words{list-style:none;padding:0;margin:0;columns:2;column-gap:18px}
 .words li{padding:3px 0;border-bottom:1px solid var(--line);break-inside:avoid;text-transform:capitalize;display:flex;justify-content:space-between;gap:6px}
 .words li small{color:var(--muted);font-variant-numeric:tabular-nums}
+.words li>span:first-child{min-width:0;overflow-wrap:anywhere}   /* palavra comprida quebra na coluna em vez de ser cortada */
 .words li.pg{font-weight:700;color:var(--plum)}
+.words li.pg>span:first-child::before{content:"★";content:"★"/"";margin-right:4px}
 .words li.miss{color:var(--muted);font-style:italic}
 .words li.new{animation:flash 1.2s}
 .words li.ex,.exn{color:var(--honey-text)}
@@ -124,16 +130,19 @@ a:focus-visible{outline:3px solid var(--plum);outline-offset:2px}
 .hintgrid table{border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:.85rem}
 .hintgrid th,.hintgrid td{padding:3px 7px;text-align:center;border-bottom:1px solid var(--line)}
 .hintgrid th{color:var(--muted);font-weight:700}
+.hintgrid th[scope="row"]{text-align:left;text-transform:uppercase;color:var(--ink)}
 .hintgrid td:first-child,.hintgrid th:first-child{text-align:left;text-transform:uppercase;font-weight:700;color:var(--ink)}
-.clues{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
-.clues span{font-family:var(--display);font-weight:700;letter-spacing:.12em;background:var(--plum-soft);color:var(--plum);padding:3px 9px;border-radius:7px;text-transform:uppercase}
-.clues span.done{text-decoration:line-through;opacity:.55}
+.clues{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0 0;padding:0;list-style:none}
+.clues li{font-family:var(--display);font-weight:700;letter-spacing:.12em;background:var(--plum-soft);color:var(--plum);padding:3px 9px;border-radius:7px;text-transform:uppercase}
+.clues li.done>span:first-child{text-decoration:line-through}
+.clues li.done::before{content:"✓";content:"✓"/"";margin-right:5px}   /* encontrada: cor normal, riscada e com ✓ (antes só opacidade, 2,8:1) */
 .statrow{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:8px;text-align:center}
 .statrow b{display:block;font-family:var(--display);font-size:1.35rem;font-variant-numeric:tabular-nums}
 .statrow span{font-size:.75rem;color:var(--muted)}
 .badges{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
 .badge{font-size:.78rem;padding:3px 9px;border-radius:999px;border:1px dashed var(--line);color:var(--muted)}
 .badge.got{border-style:solid;border-color:var(--honey);color:var(--ink);background:color-mix(in srgb,var(--honey) 18%,transparent)}
+.badge.got::before{content:"✓";content:"✓"/"";margin-right:4px}
 /* overlay */
 .overlay{position:fixed;inset:0;background:color-mix(in srgb,var(--bg) 70%,transparent);backdrop-filter:blur(4px);display:grid;place-items:center;padding:16px;z-index:20}
 .sheet{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius-2xl);box-shadow:var(--shadow);padding:var(--space-22);max-width:440px;width:100%;max-height:90vh;overflow:auto}
@@ -156,7 +165,8 @@ canvas#fx{position:fixed;inset:0;pointer-events:none;z-index:30;width:100%;heigh
   .app{gap:10px;padding-block:10px 20px}
   .o1{order:1}.play{order:2}.o2{order:3}.o4{order:4}.o5{order:5}
   .play{gap:6px}
-  .words{max-height:120px;columns:3}
+  .wordsbox{max-height:120px}
+  .words{columns:3;column-gap:10px}
   .hive{width:min(260px,66vw)}
   .card{padding:10px 14px}
   .o1 .track{margin-top:4px}
@@ -167,8 +177,12 @@ canvas#fx{position:fixed;inset:0;pointer-events:none;z-index:30;width:100%;heigh
   .hud{min-height:28px}
   .toast{height:24px}
   .entry{min-height:40px}
-  .modes{margin-left:0;order:3;width:100%;justify-content:space-between}
-  .modes button{flex:1}
+  .modes{margin-left:0;order:3;width:100%;justify-content:space-between;padding:2px}
+  .modes button{flex:1;min-height:44px}
+  /* alvos de toque de 44 px (spec 015) */
+  .dailies button{min-height:44px}
+  .iconbtn{width:44px;height:44px}
+  .linkbtn{min-height:44px;padding-inline:8px}
   .entry{font-size:1.5rem}
 }
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
@@ -183,11 +197,11 @@ canvas#fx{position:fixed;inset:0;pointer-events:none;z-index:30;width:100%;heigh
       <button id="m-livre" data-mode="livre" aria-pressed="false">Livre</button>
     </nav>
     <button class="iconbtn" id="b-theme" aria-label="Alternar modo escuro" title="Modo escuro">◐</button>
-    <button class="iconbtn" id="b-sound" aria-label="Som ligado" title="Som">♪</button>
+    <button class="iconbtn" id="b-sound" aria-label="Som" aria-pressed="true" title="Som">♪</button>
     <button class="iconbtn" id="b-help" aria-label="Como jogar" title="Como jogar">?</button>
   </header>
 
-  <div class="main">
+  <main class="main">
     <section class="play" aria-label="Tabuleiro">
       <div class="dailies" id="dailies" role="group" aria-label="Desafios de hoje"></div>
       <div class="hud" id="hud">
@@ -198,6 +212,7 @@ canvas#fx{position:fixed;inset:0;pointer-events:none;z-index:30;width:100%;heigh
       <div class="toast" id="toast" role="status" aria-live="polite"></div>
       <div class="entry" id="entry" aria-hidden="true"></div>
       <div class="sr" id="entrysr" aria-live="polite"></div>
+      <div class="sr" id="timesr" role="status" aria-live="polite"></div>
       <div class="hive" id="hive"><div class="hexwrap" id="hexwrap"></div></div>
       <div class="controls">
         <button class="btn" id="b-del">Apagar</button>
@@ -209,17 +224,17 @@ canvas#fx{position:fixed;inset:0;pointer-events:none;z-index:30;width:100%;heigh
     <aside class="side">
       <div class="card o1">
         <div class="rankrow"><span class="rankname" id="rankname">Ovo</span><span class="pts"><b id="pts">0</b> pts <span id="bonus"></span></span></div>
-        <div class="track" id="track"></div>
+        <div class="track" id="track" role="progressbar" aria-label="Nível" aria-valuemin="0" aria-valuemax="1" aria-valuenow="0"></div>
         <div class="sub" id="ranksub"></div>
       </div>
       <div class="card o2">
         <div class="foundhead"><h2 id="foundtitle">Palavras encontradas</h2><button class="linkbtn" id="b-share">Compartilhar</button></div>
-        <ul class="words" id="words"></ul><p class="empty" id="wordsempty" hidden>Forme palavras de 4 letras ou mais usando a letra central.</p>
+        <div class="wordsbox" id="wordsbox" role="group" tabindex="0" aria-labelledby="foundtitle"><ul class="words" id="words"></ul></div><p class="empty" id="wordsempty" hidden>Forme palavras de 4 letras ou mais usando a letra central.</p>
       </div>
       <div class="card o4" id="hintcard">
         <div class="foundhead"><h2>Dicas</h2><button class="linkbtn" id="b-grid">Mostrar mapa</button></div>
         <div class="sub" id="hintsub"></div>
-        <div class="clues" id="clues"></div>
+        <ul class="clues" id="clues" aria-label="Dicas reveladas"></ul>
         <div class="controls" style="justify-content:flex-start;margin-top:10px">
           <button class="btn" id="b-hint">Revelar início de palavra</button>
           <button class="btn" id="b-new" hidden>Novo desafio</button>
@@ -237,7 +252,7 @@ canvas#fx{position:fixed;inset:0;pointer-events:none;z-index:30;width:100%;heigh
         <div class="badges" id="badges"></div>
       </div>
     </aside>
-  </div>
+  </main>
 </div>
 <div class="overlay" id="overlay" hidden><div class="sheet" id="sheet" role="dialog" aria-modal="true" aria-labelledby="sheettitle"></div></div>
 <canvas id="fx" aria-hidden="true"></canvas>
@@ -418,9 +433,13 @@ function tick(){
   if(S.over)return;
   if(document.hidden||!$("overlay").hidden){S.t0=performance.now();return}
   const now=performance.now(),dt=(now-S.t0)/1000;S.t0=now;S.time=Math.max(0,S.time-dt);
-  renderTimer();renderCombo();
+  renderTimer();renderCombo();avisaTempo();
   if(S.time<=0)endLightning();
 }
+// quem usa leitor de tela não vê o relógio: avisa aos 30 s e aos 10 s (volta a avisar se palavras devolverem tempo)
+function avisaTempo(){S.said=S.said||{};
+  [30,10].forEach(t=>{if(S.time<=t&&S.time>0&&!S.said[t]){S.said[t]=true;const r=$("timesr");r.textContent="";setTimeout(()=>{r.textContent=`Faltam ${t} segundos`},60)}
+    else if(S.time>t+5)S.said[t]=false})}
 function endLightning(){
   S.over=true;clearInterval(timerId);
   const score=base()+S.bonus, rec=score>stats.best;
@@ -538,6 +557,7 @@ function renderRank(){
   const fill=document.createElement("div");fill.className="fill";fill.style.width=(f*100)+"%";t.appendChild(fill);
   RANKS.forEach((r,i)=>{const d=document.createElement("div");d.className="dot"+(i<=ri?" on":"")+(i===ri?" cur":"");
     d.style.left=(r[1]/RANKS[6][1]*100)+"%";if(i===ri)d.textContent=b;d.title=r[0];t.appendChild(d)});
+  const topo=Math.max(1,Math.ceil(RANKS[6][1]*P.max));t.setAttribute("aria-valuemax",topo);t.setAttribute("aria-valuenow",Math.min(b,topo));
   const next=RANKS[ri+1];
   let sub;
   if(S.mode==="relampago")sub=`Recorde: ${stats.best} pts · cada palavra dá mais tempo, o combo multiplica os pontos`;
@@ -545,6 +565,7 @@ function renderRank(){
   else sub=`Pontuação máxima do desafio: ${P.max}`;
   if(S.mode==="diario")sub=`Dia ${S.day} · ${DNAMES[S.k]} · `+sub;
   $("ranksub").textContent=sub;
+  $("track").setAttribute("aria-valuetext",`${rankName()}, ${b} ${b===1?"ponto":"pontos"}. ${sub}`);
 }
 function renderWords(newWord){
   const ul=$("words");
@@ -552,14 +573,17 @@ function renderWords(newWord){
   let list=S.found.slice();
   if(S.gaveUp)list=P.list.slice();
   list=list.concat(S.extra).sort((a,b)=>a.localeCompare(b));
-  $("wordsempty").hidden=list.length>0;ul.hidden=!list.length;
+  $("wordsempty").hidden=list.length>0;$("wordsbox").hidden=!list.length;
   ul.innerHTML=list.map(w=>{const ex=S.extra.includes(w);
-    return `<li class="${P.pangrams.has(w)?"pg ":""}${ex?"ex ":S.found.includes(w)?"":"miss "}${w===newWord?"new":""}"><span>${disp(w)}${ex?'<span class="sr tag">extra</span>':""}</span><small>${points(w)}</small></li>`}).join("");
+    const dito=(P.pangrams.has(w)?"pangrama":"")+(!ex&&!S.found.includes(w)?(P.pangrams.has(w)?", ":"")+"não encontrada":"");   // quem não vê a lista também sabe quais são pangramas e quais faltaram
+    return `<li class="${P.pangrams.has(w)?"pg ":""}${ex?"ex ":S.found.includes(w)?"":"miss "}${w===newWord?"new":""}"><span>${disp(w)}${ex?'<span class="sr tag">extra</span>':""}</span>${dito?`<span class="sr tag">${dito}</span>`:""}<small>${points(w)}</small></li>`}).join("");
+  const box=$("wordsbox"),nova=ul.querySelector("li.new");   // a palavra nova aparece sem o jogador precisar rolar a lista
+  if(nova&&!box.hidden){const bb=box.getBoundingClientRect(),r=nova.getBoundingClientRect();if(r.top<bb.top)box.scrollTop-=bb.top-r.top;else if(r.bottom>bb.bottom)box.scrollTop+=r.bottom-bb.bottom}
 }
 function renderHints(){
   const used=S.hintsUsed||0;
   $("hintsub").textContent=S.mode==="relampago"?"Cada dica custa 5 segundos.":`${3-Math.min(3,used)} de 3 dicas restantes. O mapa mostra quantas palavras faltam por letra inicial e tamanho.`;
-  $("clues").innerHTML=S.clues.map(w=>`<span class="${S.found.includes(w)?"done":""}" title="${w.length} letras">${w.slice(0,2)}${"·".repeat(w.length-2)}</span>`).join("");
+  $("clues").innerHTML=S.clues.map(w=>`<li class="${S.found.includes(w)?"done":""}"><span aria-hidden="true">${w.slice(0,2)}${"·".repeat(w.length-2)}</span><span class="sr">Começa com ${w.slice(0,2).toUpperCase()}, ${w.length} letras${S.found.includes(w)?", já encontrada":""}</span></li>`).join("");
   $("b-hint").disabled=S.gaveUp||(S.mode!=="relampago"&&used>=3);
   $("b-giveup").disabled=S.gaveUp;
   if(!$("grid").hidden)renderGrid();
@@ -568,9 +592,9 @@ function renderGrid(){
   const left=P.list.filter(w=>!S.found.includes(w));
   const lens=[...new Set(P.list.map(w=>w.length))].sort((a,b)=>a-b);
   const starts=[...new Set(P.list.map(w=>w[0]))].sort();
-  let h="<table><tr><th></th>"+lens.map(l=>`<th>${l}</th>`).join("")+"<th>Σ</th></tr>";
+  let h='<table><caption class="sr">Palavras que faltam, por letra inicial (linhas) e número de letras (colunas)</caption><tr><th scope="col"><span class="sr">Inicial</span></th>'+lens.map(l=>`<th scope="col">${l}<span class="sr"> letras</span></th>`).join("")+'<th scope="col"><span aria-hidden="true">Σ</span><span class="sr">Total</span></th></tr>';
   starts.forEach(s=>{const row=lens.map(l=>left.filter(w=>w[0]===s&&w.length===l).length);
-    h+=`<tr><td>${s}</td>${row.map(n=>`<td>${n||"–"}</td>`).join("")}<td><b>${row.reduce((a,b)=>a+b,0)}</b></td></tr>`});
+    h+=`<tr><th scope="row">${s}</th>${row.map(n=>n?`<td>${n}</td>`:'<td><span aria-hidden="true">–</span><span class="sr">nenhuma</span></td>').join("")}<td><b>${row.reduce((a,b)=>a+b,0)}</b></td></tr>`});
   $("grid").innerHTML=h+"</table>";
 }
 function renderCombo(){
@@ -592,7 +616,7 @@ function renderTimer(){
 function renderStats(){
   $("s-streak").textContent=stats.lastDay>=dayNumber()-1?stats.streak:0;
   $("s-best").textContent=stats.best;$("s-pang").textContent=stats.pangs;
-  $("badges").innerHTML=BADGES.map(b=>`<span class="badge ${stats.badges.includes(b[0])?"got":""}">${b[1]}</span>`).join("");
+  $("badges").innerHTML=BADGES.map(b=>{const got=stats.badges.includes(b[0]);return `<span class="badge ${got?"got":""}">${b[1]}<span class="sr">, ${got?"obtida":"não obtida"}</span></span>`}).join("");
 }
 let toastT;
 function toast(msg,big,word,sug){const t=$("toast");t.innerHTML="";clearTimeout(toast.t);
@@ -693,7 +717,7 @@ function themeTitle(){const dark=(document.documentElement.getAttribute("data-th
 themeTitle();
 $("b-theme").onclick=()=>{const cur=document.documentElement.getAttribute("data-theme")||(matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light");
   const next=cur==="dark"?"light":"dark";applyTheme(next);store.set("theme",next);themeTitle()};
-function renderSound(){$("b-sound").style.opacity=sound?1:.45;$("b-sound").setAttribute("aria-label",sound?"Som ligado":"Som desligado")}
+function renderSound(){const b=$("b-sound");b.classList.toggle("off",!sound);b.setAttribute("aria-pressed",sound);b.title=sound?"Som ligado":"Som desligado"}
 $("b-sound").onclick=()=>{sound=!sound;store.set("sound",sound);renderSound();sfx("good")};
 $("overlay").addEventListener("click",e=>{
   const act=e.target.dataset&&e.target.dataset.act;

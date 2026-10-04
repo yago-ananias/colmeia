@@ -266,6 +266,133 @@ const ok = (cond, msg) => { console.log((cond ? "  ok   " : "  FALHOU ") + msg);
   ok(await p.$$eval("#hive .hex, #b-enter, #b-del, #b-shuffle", l => l.every(e => getComputedStyle(e).touchAction === "manipulation")),
     "letras e botões com touch-action: manipulation (toque duplo não espera nem dá zoom)");
 
+  console.log("Acessibilidade, itens 7 a 14 (spec 015)");
+  {
+    const hoje = Math.round((new Date(new Date().getFullYear(), new Date().getMonth(), new Date().getDate()) - new Date(2026, 9, 1)) / 864e5) + 1;
+    const comuns = day.words[0].filter(w => new Set(w).size < 7), [wA, wB, wC] = comuns;
+    // progresso de hoje (Manhã): uma palavra achada, a dica dela (já encontrada) e uma dica de outra palavra
+    const semear = (extra = {}) => ({ "colmeia:seenHelp": "true", "colmeia:stats": JSON.stringify({ streak: 1, lastDay: 1, best: 10, pangs: 1, badges: ["pang"] }),
+      ["colmeia:d" + hoje + "-0"]: JSON.stringify({ code: day.codes[0], found: [wA], clues: [wA, wB], hintsUsed: 2, ...extra }) });
+    const abrir = async (scheme, viewport, store, relogio = false) => {
+      const c = await browser.newContext({ viewport, colorScheme: scheme });
+      await c.addInitScript(st => { for (const [k, v] of Object.entries(st)) localStorage.setItem(k, v); }, store);
+      const pg = await c.newPage(); pg.on("pageerror", e => errors.push(e.message));
+      if (relogio) await pg.clock.install();
+      await pg.route(/fonts\.(googleapis|gstatic)\.com/, r => r.abort()); await pg.goto(url); await pg.waitForTimeout(300);
+      return { c, pg };
+    };
+    // contraste entre uma propriedade de cor de um elemento e o fundo de outro (cores já resolvidas pelo navegador)
+    const razao = (pg, sel, prop, fsel, fprop = "backgroundColor") => pg.evaluate(([sel, prop, fsel, fprop]) => {
+      const rgb = s => (s.match(/[\d.]+/g) || []).slice(0, 3).map(Number);
+      const lum = c => { const [r, g, b] = c.map(v => { v /= 255; return v <= .03928 ? v / 12.92 : Math.pow((v + .055) / 1.055, 2.4); }); return .2126 * r + .7152 * g + .0722 * b; };
+      const a = lum(rgb(getComputedStyle(document.querySelector(sel))[prop])), b = lum(rgb(getComputedStyle(document.querySelector(fsel))[fprop]));
+      return +((Math.max(a, b) + .05) / (Math.min(a, b) + .05)).toFixed(2);
+    }, [sel, prop, fsel, fprop]);
+    const celular = { width: 375, height: 740 };
+
+    for (const scheme of ["light", "dark"]) {
+      const nome = scheme === "dark" ? "escuro" : "claro";
+      const { c, pg } = await abrir(scheme, celular, semear());
+      // item 7: textos esmaecidos
+      const parado = await razao(pg, "#combo", "color", "#combo"), op = await pg.$eval("#combo", e => getComputedStyle(e).opacity);
+      ok(parado >= 4.5 && op === "1", `${nome}: "Combo: acerte em sequência" parado tem contraste ${parado}:1, sem opacidade (item 7)`);
+      const dica = await razao(pg, "#clues li.done", "color", "#clues li.done");
+      const dinfo = await pg.$eval("#clues li.done", e => ({ op: getComputedStyle(e).opacity, marca: getComputedStyle(e, "::before").content, risco: getComputedStyle(e.firstElementChild).textDecorationLine }));
+      ok(dica >= 4.5 && dinfo.op === "1" && dinfo.marca.includes("✓") && dinfo.risco === "line-through", `${nome}: dica encontrada com contraste ${dica}:1, riscada e com ✓ (item 7)`);
+      await pg.keyboard.type(wC); await pg.keyboard.press("Enter"); await pg.waitForTimeout(500);
+      const vivo = await razao(pg, "#combo.live", "color", "#combo.live");
+      ok(vivo >= 4.5, `${nome}: combo ativo com contraste ${vivo}:1 (item 7)`);
+      // item 8: desafio selecionado; item 11: barra de nível
+      const ativo = await razao(pg, '#dailies button[aria-pressed="true"]', "borderTopColor", '#dailies button[aria-pressed="true"]');
+      ok(ativo >= 3, `${nome}: desafio selecionado com borda de contraste ${ativo}:1, mínimo 3 (item 8)`);
+      const fill = await razao(pg, "#track .fill", "backgroundColor", ".card.o1");
+      ok(fill >= 3, `${nome}: preenchimento da barra de nível com contraste ${fill}:1, mínimo 3 (item 11)`);
+      // item 14: alvos de toque no celular
+      const alvos = await pg.evaluate(() => [".modes button", "#dailies button", ".iconbtn", "#b-share", "#b-grid"].flatMap(s => [...document.querySelectorAll(s)].map(e => { const r = e.getBoundingClientRect(); return [s, Math.round(r.width), Math.round(r.height)]; })));
+      const pequenos = alvos.filter(([, w, h]) => w < 44 || h < 44);
+      ok(alvos.length >= 10 && !pequenos.length, `${nome}: abas, desafios, ícones e links com pelo menos 44×44 px no celular (item 14)` + (pequenos.length ? ": " + JSON.stringify(pequenos) : ""));
+      await c.close();
+    }
+
+    {
+      const { c, pg } = await abrir("light", celular, semear());
+      // item 8: conquistas
+      const emb = await pg.$$eval("#badges .badge", l => l.map(b => ({ got: b.classList.contains("got"), sr: (b.querySelector(".sr") || {}).textContent || "", marca: getComputedStyle(b, "::before").content })));
+      ok(emb.length === 7 && emb.some(b => b.got) && emb.every(b => b.got ? /obtida/.test(b.sr) && !/não/.test(b.sr) && b.marca.includes("✓") : /não obtida/.test(b.sr)),
+        "conquistas dizem \"obtida\" ou \"não obtida\" para o leitor, e as obtidas ganham ✓ (item 8)");
+      // item 9: dicas e mapa
+      const dicas = await pg.$$eval("#clues li", l => l.map(x => ({ escondido: x.firstElementChild.getAttribute("aria-hidden"), fala: x.querySelector(".sr").textContent })));
+      const fala = w => `Começa com ${w.slice(0, 2).toUpperCase()}, ${w.length} letras`;
+      ok(dicas.length === 2 && dicas.every(d => d.escondido === "true") && dicas[0].fala === fala(wA) + ", já encontrada" && dicas[1].fala === fala(wB),
+        "dica é lida como \"Começa com XX, N letras\" e não como pontos" + (dicas.length ? ": " + JSON.stringify(dicas.map(d => d.fala)) : ""));
+      await pg.click("#b-grid"); await pg.waitForTimeout(100);
+      const mapa = await pg.$eval("#grid table", t => ({ cap: ((t.querySelector("caption") || {}).textContent || "").length, col: t.querySelectorAll('th[scope="col"]').length,
+        linhas: [...t.querySelectorAll("tr")].slice(1).every(r => r.firstElementChild.tagName === "TH" && r.firstElementChild.getAttribute("scope") === "row"),
+        total: [...t.querySelectorAll("th")].some(h => /Total/.test(h.textContent)),
+        zeros: [...t.querySelectorAll("td")].filter(d => d.textContent.includes("–")).every(d => /nenhuma/.test(d.textContent) && d.querySelector('[aria-hidden="true"]')) }));
+      ok(mapa.cap > 10 && mapa.col >= 3 && mapa.linhas && mapa.total && mapa.zeros, "mapa tem legenda, títulos de linha e coluna, \"Total\" no lugar de Σ e \"nenhuma\" no lugar de – (item 9)" + (mapa.col ? "" : ": " + JSON.stringify(mapa)));
+      // item 10: região principal
+      const reg = await pg.evaluate(() => ({ n: document.querySelectorAll("main").length, dentro: !!document.querySelector("main #hive") && !!document.querySelector("main #words"), canvas: document.getElementById("fx").getAttribute("aria-hidden") }));
+      ok(reg.n === 1 && reg.dentro && reg.canvas === "true", "página tem uma região <main> com a colmeia e a lista, e o confete fica fora do leitor (item 10)");
+      // item 11: barra de nível como progresso
+      const lerBarra = () => pg.evaluate(() => { const t = document.getElementById("track"); return { papel: t.getAttribute("role"), nome: t.getAttribute("aria-label"), agora: +t.getAttribute("aria-valuenow"), max: +t.getAttribute("aria-valuemax"),
+        texto: t.getAttribute("aria-valuetext"), pts: +document.getElementById("pts").textContent, nivel: document.getElementById("rankname").textContent }; });
+      const b0 = await lerBarra();
+      await pg.keyboard.type(wC); await pg.keyboard.press("Enter"); await pg.waitForTimeout(500);
+      const b1 = await lerBarra();
+      const textoOk = x => x.texto.startsWith(`${x.nivel}, ${x.pts} ${x.pts === 1 ? "ponto" : "pontos"}. `);
+      ok(b0.papel === "progressbar" && b0.nome === "Nível" && b0.max > 0 && b0.agora === Math.min(b0.pts, b0.max) && textoOk(b0) && b1.pts > b0.pts && b1.agora === Math.min(b1.pts, b1.max) && textoOk(b1),
+        "barra de nível é lida como progresso, com \"Nível, N pontos, faltam M para X\" atualizado a cada palavra (item 11)" + (textoOk(b1) ? "" : ": " + JSON.stringify([b0, b1])));
+      // item 12: botão de som
+      const som = async () => pg.$eval("#b-sound", e => ({ premido: e.getAttribute("aria-pressed"), riscado: e.classList.contains("off") && getComputedStyle(e, "::after").content !== "none", nome: e.getAttribute("aria-label") }));
+      const s0 = await som(); await pg.click("#b-sound"); const s1 = await som(); await pg.click("#b-sound"); const s2 = await som();
+      ok(s0.premido === "true" && !s0.riscado && s1.premido === "false" && s1.riscado && s2.premido === "true" && !s2.riscado && s0.nome === "Som" && s1.nome === "Som",
+        "botão de som tem aria-pressed e ícone riscado quando desligado, não só opacidade (item 12)" + (s1.riscado ? "" : ": " + JSON.stringify([s0, s1, s2])));
+      await c.close();
+    }
+
+    {
+      // item 8 e item 15: depois de "Ver respostas", pangramas e palavras que faltaram falam e têm símbolo; a lista rola pelo teclado
+      const { c, pg } = await abrir("light", celular, semear({ gaveUp: true }));
+      const lista = await pg.$$eval("#words li", l => l.map(x => ({ pg: x.classList.contains("pg"), miss: x.classList.contains("miss"), sr: [...x.querySelectorAll(".sr")].map(s => s.textContent).join("|"), marca: getComputedStyle(x.firstElementChild, "::before").content })));
+      const pgs = lista.filter(x => x.pg), faltam = lista.filter(x => x.miss);
+      ok(pgs.length > 0 && pgs.every(x => /pangrama/.test(x.sr) && x.marca.includes("★")) && faltam.length > 0 && faltam.every(x => /não encontrada/.test(x.sr)),
+        "pangramas ganham ★ e \"pangrama\", e palavras que faltaram dizem \"não encontrada\" (item 8)");
+      const rol = await pg.$eval("#wordsbox", e => ({ tab: e.tabIndex, vertical: e.scrollHeight > e.clientHeight, lateral: e.scrollWidth > e.clientWidth + 1, nome: e.getAttribute("aria-labelledby") }));
+      await pg.focus("#wordsbox"); await pg.keyboard.press("PageDown"); await pg.waitForTimeout(200);
+      const dep = await pg.$eval("#wordsbox", e => ({ topo: e.scrollTop, contorno: getComputedStyle(e).outlineStyle }));
+      ok(rol.tab === 0 && rol.vertical && !rol.lateral && rol.nome === "foundtitle" && dep.topo > 0 && dep.contorno !== "none",
+        "lista de palavras rola na vertical (sem colunas escondidas à direita) e pelo teclado, com foco visível (itens 15 e 16, achados pelo axe-core)" + (dep.topo > 0 && !rol.lateral ? "" : ": " + JSON.stringify([rol, dep])));
+      await c.close();
+    }
+
+    {
+      // item 16: no computador a lista também rola na vertical; palavra nova fora da área visível aparece sozinha
+      const todas = day.words[0], ultima = todas[todas.length - 1];
+      const { c, pg } = await abrir("light", { width: 1200, height: 900 }, semear({ found: todas.slice(0, -1), clues: [] }));
+      const rol = await pg.$eval("#wordsbox", e => ({ vertical: e.scrollHeight > e.clientHeight, lateral: e.scrollWidth > e.clientWidth + 1 }));
+      await pg.keyboard.type(ultima); await pg.keyboard.press("Enter"); await pg.waitForTimeout(500);
+      const nova = await pg.evaluate(() => { const b = document.getElementById("wordsbox"), li = document.querySelector("#words li.new"); if (!li) return null;
+        const bb = b.getBoundingClientRect(), r = li.getBoundingClientRect(); return { dentro: r.top >= bb.top - 1 && r.bottom <= bb.bottom + 1, topo: b.scrollTop }; });
+      ok(rol.vertical && !rol.lateral && nova && nova.dentro, `computador: lista rola na vertical e a palavra nova ("${ultima}") fica visível sem rolar à mão (item 16)` + (nova && nova.dentro ? "" : ": " + JSON.stringify([rol, nova])));
+      await c.close();
+    }
+
+    {
+      // item 13: relógio do Relâmpago anunciado aos 30 s e aos 10 s (relógio de mentira do Playwright)
+      const { c, pg } = await abrir("light", { width: 1200, height: 900 }, { "colmeia:seenHelp": "true" }, true);
+      const lido = () => pg.$eval("#timesr", e => ({ texto: e.textContent, vivo: e.getAttribute("aria-live"), papel: e.getAttribute("role") }));
+      await pg.click("#m-relampago"); await pg.clock.runFor(1000);
+      const t1 = await lido(); await pg.clock.runFor(40000);
+      const t41 = await lido(); await pg.clock.runFor(6000);
+      const t47 = await lido(); await pg.clock.runFor(20000);
+      const t67 = await lido();
+      ok(t1.texto === "" && t41.texto === "" && t47.texto === "Faltam 30 segundos" && t67.texto === "Faltam 10 segundos" && t47.vivo === "polite" && t47.papel === "status",
+        "Relâmpago anuncia \"Faltam 30 segundos\" e \"Faltam 10 segundos\" numa região educada (item 13)" + (t47.texto ? "" : ": " + JSON.stringify([t1, t41, t47, t67])));
+      await c.close();
+    }
+  }
+
   console.log("Compartilhar, Livre e sugestão (spec 008)");
   const hiveSet = () => p.$$eval(".hex", h => h.map(x => x.dataset.l).sort().join(""));
   const hiveCode = () => p.evaluate(() => { const c = document.querySelector(".hex.center").dataset.l;

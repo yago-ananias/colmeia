@@ -78,6 +78,12 @@ O nível é calculado só com os pontos das palavras (as extras contam), como fr
 ## Controles
 Toque ou clique nas letras, ou use o teclado: letras digitam, **Enter** envia, **Backspace** apaga, **espaço** embaralha. Com **Tab** dá para chegar a qualquer botão (inclusive as letras), e Enter ou espaço acionam o botão que está com o foco. Depois de clicar ou tocar num botão, ou de digitar letras, Enter volta a enviar a palavra e espaço volta a embaralhar (spec 013). No celular, toques rápidos nas letras (inclusive repetindo a mesma) não viram zoom (spec 014).
 
+## Acessibilidade (specs 007 e 015)
+- Teclado: Tab chega a qualquer botão, inclusive as letras e a lista de palavras (que rola na vertical, com as setas e Page Down, e mostra a palavra nova sozinha); Enter e espaço acionam o botão que chegou por Tab. As janelas prendem o foco e devolvem ao fechar.
+- Leitor de tela: página em português do Brasil, com região principal. A palavra digitada, o motivo da recusa e a palavra aceita são anunciados. Dicas são lidas como "Começa com RO, 4 letras"; o mapa é uma tabela com legenda e títulos ("Total", "nenhuma"); o nível é uma barra de progresso ("Ovo, 0 pontos. Faltam 5 pts para Larva"); o som é um botão ligado/desligado; no Relâmpago o jogo avisa "Faltam 30 segundos" e "Faltam 10 segundos".
+- Nada depende só de cor: conquistas obtidas (✓), pangramas (★), dicas encontradas (✓, riscadas), palavras que faltaram (itálico e "não encontrada") e o desafio selecionado têm texto ou símbolo. Textos com contraste mínimo de 4,5:1 e bordas e barras de 3:1, nos temas claro e escuro.
+- Celular (telas até 760 px): abas de modo, desafios do dia, ícones e links dos cartões com pelo menos 44 × 44 px. "Reduzir movimento" desliga animações e confete.
+
 ## Progresso salvo (spec 012)
 - O progresso fica só no navegador: palavras e pontos de cada desafio do dia e do Livre, estatísticas e conquistas, tema, som, letras já vistas no Livre e palavras sugeridas.
 - Se algo salvo estiver com defeito, o jogo abre normalmente, descarta só a parte com defeito (o que estava certo continua) e mostra "Progresso com defeito descartado". Progresso com letras que não formam nenhuma palavra é descartado: o Diário abre com as letras do dia e o Livre sorteia outro desafio.
