@@ -94,4 +94,4 @@ Toque ou clique nas letras, ou use o teclado: letras digitam, **Enter** envia, *
 - Nunca vai endereço da página, texto entre aspas, link, e-mail, número longo nem palavra digitada. Cada erro vai uma vez por carregamento; no máximo 3 por carregamento e 10 por aparelho por dia.
 - Erros de extensões do navegador e de scripts de fora são ignorados.
 - Todo dia (07:41 de Brasília) um robô joga no site: ajuda, colmeia, desafios do dia, palavra aceita e recusada, tema, Relâmpago, ícones, tempo de carga e erros. Não conta visita no Umami. Se falhar, abre uma issue "Site com problema (verificação diária)" no repositório; quando volta, ela é fechada. A mesma verificação roda no site montado antes de cada publicação.
-- O painel mostra a saúde no cartão "Saúde do jogo": site agora (checado a cada hora), última verificação diária e erros dos jogadores.
+- O painel mostra a saúde no cartão "Saúde do jogo": site no ar (checado uma vez por dia), última verificação diária e erros dos jogadores.

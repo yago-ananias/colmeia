@@ -31,7 +31,7 @@ YAGO (2026-10-03): "tenho que montar isso lá no umami? queria ver tudo por aqui
   - `carregamento` {ms (arredondado a 100), tema: claro|escuro}
 - **FR-005**: Nenhum evento por palavra digitada, para caber no plano grátis.
 
-- **FR-006**: `ferramentas/metricas.mjs` roda a cada hora no GitHub Actions (`.github/workflows/metricas.yml`, só no repositório), lê o Umami pelo link de compartilhamento e grava os totais em `metricas.json` na branch `metricas` (sempre um único commit). São só totais, sem dado pessoal.
+- **FR-006**: `ferramentas/metricas.mjs` roda uma vez por dia (08:17 de Brasília) no GitHub Actions (`.github/workflows/metricas.yml`, só no repositório), lê o Umami pelo link de compartilhamento e grava os totais em `metricas.json` na branch `metricas` (sempre um único commit). São só totais, sem dado pessoal.
 - **FR-007**: O painel é um Artifact ("Painel da Colmeia") que lê esse arquivo pelo conector Firecrawl de quem abre (o Artifact não pode buscar endereços externos por conta própria). Mostra: pessoas, visitas, partidas e tempo por visita (Hoje, 7 dias, 30 dias), visitas por dia, partidas por modo e desafio, níveis alcançados, pangramas, colmeias completas, dicas, desistências, compartilhamentos, sugestões, Relâmpago, origem, aparelho, país, velocidade e tema.
 
 ## Success Criteria

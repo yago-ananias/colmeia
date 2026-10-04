@@ -1,11 +1,11 @@
 name: Coletar métricas
 
-# A cada hora lê os números do Umami (link de compartilhamento) e grava metricas.json
+# Uma vez por dia lê os números do Umami (link de compartilhamento) e grava metricas.json
 # na branch "metricas". O painel da Colmeia no projeto lê esse arquivo. Spec 009.
 # Também confere se o site responde e lê a última verificação diária (verificar-site.yml). Spec 010.
 on:
   schedule:
-    - cron: "17 * * * *"
+    - cron: "17 11 * * *"   # 08:17 em Brasília, depois da verificação diária do site (07:41)
   workflow_dispatch:
 
 permissions:

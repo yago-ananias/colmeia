@@ -7,4 +7,4 @@
 - [X] T005 [US3] Aviso `DadoInvalido` ao monitoramento, só com o nome do dado
 - [X] T006 Testes da spec 012 e adaptação dos testes da spec 010
 - [X] T007 REGRAS.md, gerar e publicar no Artifact
-- [ ] T008 YAGO dá o ok; enviar ao site
+- [X] T008 YAGO dá o ok ("pode enviar", 03/10 21:45 UTC); no site desde 21:57 UTC (commit d176e69)
