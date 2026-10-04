@@ -12,4 +12,4 @@
 - [X] T009b Item 16: a lista rola na vertical em vez de esconder colunas à direita
 - [X] T010 Testes em `test.js`, axe-core antes e depois, REGRAS.md
 - [X] T011a Gerar e publicar no Artifact (versão 17, 2026-10-04)
-- [ ] T011b YAGO dá o "pode enviar"; enviar ao site
+- [X] T011b YAGO deu o "pode enviar"; no site desde 2026-10-04 01:23 UTC (commit 8c0c90c)

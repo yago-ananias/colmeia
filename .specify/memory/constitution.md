@@ -1,5 +1,11 @@
 <!--
 Sync Impact Report
+Version: 1.1.0 → 1.2.0 (2026-10-04, auditoria Spec Kit, decisão de YAGO "emendar"): MINOR.
+  - Princípios I e II: ganham a camada das palavras extras (spec 011), que pontuam mas ficam fora do que conta como resposta do desafio.
+  - Princípio III: a exceção cobre também o envio de erros sem dado pessoal (specs 010 e 012), além da medição de uso (spec 009).
+  - Não alterados nesta versão (ficam para outra decisão): tamanho dos desafios já publicados (V), spec 002, demais achados da auditoria.
+  Templates: plan-template.md ✅ (Constitution Check já usa estes princípios; nada a mudar) · spec-template.md ✅ · tasks-template.md ✅
+  Specs: 011 ✅ (agora amparada pelos princípios I e II) · 009, 010 e 012 ✅ (amparadas pela exceção do III)
 Version: 1.0.0 → 1.1.0 (2026-10-03, spec 009): princípio III ganha a exceção da medição de uso opcional no site.
 Version: 0.0.0 (template) → 1.0.0
 Principles added: I–V (all new)
@@ -14,21 +20,31 @@ Follow-up TODOs: none
 ### I. Regra do jogo é sagrada
 O núcleo do jogo segue o Soletra: 7 letras, uma letra central obrigatória, palavras com 4 letras
 ou mais, letras podem se repetir, acentos e cedilha são ignorados na digitação. Toda novidade
-(modos, combos, dicas) é camada por cima desse núcleo e nunca muda o que conta como palavra válida.
+(modos, combos, dicas) é camada por cima desse núcleo e nunca muda o que conta como resposta de um
+desafio. A única camada que aceita mais palavras são as palavras extras (princípio II): elas pontuam,
+mas não são resposta do desafio, não contam para completar a colmeia e não aparecem em "Ver respostas".
 O jogo é original: não usa código, imagens, nome ou marca do g1.
 
 ### II. Português de verdade
-Todo texto da interface é em português do Brasil, claro e curto. A lista de palavras contém apenas
-palavras comuns do português, sem nomes próprios e sem palavrões. Uma palavra só entra se existir em
-dicionário e estiver entre as mais usadas na língua. Palavras estranhas reportadas são removidas.
+Todo texto da interface é em português do Brasil, claro e curto. A lista principal (as respostas
+dos desafios) contém apenas palavras comuns do português, sem nomes próprios e sem palavrões. Uma
+palavra só entra nela se existir em dicionário e estiver entre as mais usadas na língua.
+Palavras extras: termos técnicos e palavras menos comuns que o dicionário conhece valem como
+"palavra extra" (spec 011). Elas passam pelas mesmas regras do jogo (sem plural, verbo conjugado,
+nome próprio, estrangeirismo, pronome ou palavrão), somam pontos e não entram na lista principal,
+na contagem do desafio nem em "Ver respostas". Palavras estranhas reportadas, da lista principal
+ou das extras, são removidas.
 
 ### III. Um arquivo, zero servidor
 O jogo publicado é uma única página HTML autocontida (lista de palavras embutida), que roda offline
 depois de aberta e não depende de servidor nem de conta. O progresso fica no navegador do jogador e o
 jogo funciona normalmente quando o armazenamento local não está disponível.
 Exceção: a versão do site pode carregar um script de medição de uso sem cookies e sem dados pessoais
-(hoje o Umami). Ele é opcional: o jogo funciona igual se ele não carregar, nenhuma palavra digitada é
-enviada, e o arquivo `colmeia.html` e o Artifact não fazem chamadas de medição.
+(hoje o Umami), e por ele enviar também eventos de erro (erros de script, progresso salvo com defeito;
+specs 009, 010 e 012). Ele é opcional: o jogo funciona igual se ele não carregar, nenhuma palavra
+digitada nem texto do jogador é enviado, os erros vão só com o tipo do erro, o local no código, a fase e o modo do jogo, em
+quantidade limitada por carregamento e por dia, e o arquivo `colmeia.html` e o Artifact não fazem
+chamadas de medição nem de erro.
 
 ### IV. Dinâmico e acessível em qualquer tela
 Cada ação tem resposta imediata (animação, mensagem ou som opcional). O jogo funciona no celular
@@ -59,4 +75,4 @@ Esta constituição vale acima de qualquer outra prática do projeto. Mudanças 
 arquivo, subir a versão (MAJOR para remover ou redefinir princípio, MINOR para adicionar, PATCH para
 ajuste de texto) e conferir se specs e planos abertos continuam de acordo.
 
-**Version**: 1.1.0 | **Ratified**: 2026-10-02 | **Last Amended**: 2026-10-03
+**Version**: 1.2.0 | **Ratified**: 2026-10-02 | **Last Amended**: 2026-10-04
