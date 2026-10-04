@@ -76,7 +76,7 @@ O nível é calculado só com os pontos das palavras (as extras contam), como fr
 - **Conquistas:** Primeiro pangrama, Combo x5, Virou Rainha, 100 pts no Relâmpago, 3 dias seguidos, Guardiã sem dicas (chegar a Guardiã sem dicas e sem ver respostas) e Colmeia completa.
 
 ## Controles
-Toque ou clique nas letras, ou use o teclado: letras digitam, **Enter** envia, **Backspace** apaga, **espaço** embaralha. Com **Tab** dá para chegar a qualquer botão (inclusive as letras), e Enter ou espaço acionam o botão que está com o foco. Depois de clicar ou tocar num botão, ou de digitar letras, Enter volta a enviar a palavra e espaço volta a embaralhar (spec 013).
+Toque ou clique nas letras, ou use o teclado: letras digitam, **Enter** envia, **Backspace** apaga, **espaço** embaralha. Com **Tab** dá para chegar a qualquer botão (inclusive as letras), e Enter ou espaço acionam o botão que está com o foco. Depois de clicar ou tocar num botão, ou de digitar letras, Enter volta a enviar a palavra e espaço volta a embaralhar (spec 013). No celular, toques rápidos nas letras (inclusive repetindo a mesma) não viram zoom (spec 014).
 
 ## Progresso salvo (spec 012)
 - O progresso fica só no navegador: palavras e pontos de cada desafio do dia e do Livre, estatísticas e conquistas, tema, som, letras já vistas no Livre e palavras sugeridas.

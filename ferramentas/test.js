@@ -262,6 +262,10 @@ const ok = (cond, msg) => { console.log((cond ? "  ok   " : "  FALHOU ") + msg);
     await c.close();
   }
 
+  console.log("Toque rápido nas letras (spec 014)");
+  ok(await p.$$eval("#hive .hex, #b-enter, #b-del, #b-shuffle", l => l.every(e => getComputedStyle(e).touchAction === "manipulation")),
+    "letras e botões com touch-action: manipulation (toque duplo não espera nem dá zoom)");
+
   console.log("Compartilhar, Livre e sugestão (spec 008)");
   const hiveSet = () => p.$$eval(".hex", h => h.map(x => x.dataset.l).sort().join(""));
   const hiveCode = () => p.evaluate(() => { const c = document.querySelector(".hex.center").dataset.l;
