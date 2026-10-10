@@ -8,9 +8,8 @@ on:
     - cron: "17 11 * * *"   # 08:17 em Brasília, depois da verificação diária do site (07:41)
   workflow_dispatch:
 
-permissions:
-  contents: write
-  actions: read   # ler as execuções e o resumo da verificação do site
+# Por padrão nada. Quem lê (job coletar) só lê; só o job gravar escreve, e só na branch metricas. Spec 017.
+permissions: {}
 
 concurrency:
   group: metricas
@@ -19,9 +18,14 @@ concurrency:
 jobs:
   coletar:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: read   # ler as execuções e o resumo da verificação do site
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: 22
       - name: Ler a última verificação do site
@@ -34,14 +38,33 @@ jobs:
           id=$(jq -r '.[0].databaseId // empty' /tmp/verificacao-run.json)
           if [ -n "$id" ]; then gh run download "$id" -n verificacao -D /tmp/verificacao || echo "Execução $id sem resumo"; fi
       - name: Ler o Umami
+        # O link de compartilhamento do Umami abre o painel inteiro: fica só no secret UMAMI_SHARE, nunca no repositório.
         env:
-          UMAMI_SHARE: ${{ secrets.UMAMI_SHARE || 'https://cloud.umami.is/share/G9KqGRvAWs7xISod' }}
-        run: node ferramentas/metricas.mjs /tmp/metricas.json
+          UMAMI_SHARE: ${{ secrets.UMAMI_SHARE }}
+        run: |
+          if [ -z "$UMAMI_SHARE" ]; then echo "::error::Falta o secret UMAMI_SHARE (Settings > Secrets and variables > Actions)"; exit 1; fi
+          node ferramentas/metricas.mjs /tmp/metricas.json
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: metricas
+          path: /tmp/metricas.json
+          retention-days: 1
+
+  gravar:
+    needs: coletar
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: metricas
+          path: /tmp/m
       - name: Gravar na branch metricas
         run: |
           cd "$(mktemp -d)"
           git init -q -b metricas
-          cp /tmp/metricas.json .
+          cp /tmp/m/metricas.json .
           git add metricas.json
           git -c user.name="github-actions[bot]" -c user.email="41898282+github-actions[bot]@users.noreply.github.com" commit -q -m "Métricas $(date -u +%FT%TZ)"
           git push -q -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" metricas

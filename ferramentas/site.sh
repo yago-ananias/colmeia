@@ -26,6 +26,13 @@ cat <<'HEAD'
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="manifest" href="manifest.webmanifest">
 HEAD
+# Política de segurança de conteúdo (spec 017): só roda script do próprio site (os dois blocos embutidos, pelo hash)
+# e do Umami; estilos e fontes só daqui e do Google Fonts. Os hashes são recalculados a cada montagem.
+node -e '
+const h=require("fs").readFileSync("colmeia.html","utf8"),c=require("crypto");
+const hs=[...h.matchAll(/<script>([\s\S]*?)<\/script>/g)].map(m=>"'\''sha256-"+c.createHash("sha256").update(m[1]).digest("base64")+"'\''");
+if(!hs.length)throw new Error("colmeia.html sem script embutido");
+console.log(`<meta http-equiv="Content-Security-Policy" content="default-src '\''self'\''; script-src '\''self'\'' ${hs.join(" ")} https://cloud.umami.is; connect-src '\''self'\'' https://*.umami.is; style-src '\''self'\'' '\''unsafe-inline'\'' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src '\''self'\'' data:; manifest-src '\''self'\''; object-src '\''none'\''; base-uri '\''none'\''; form-action '\''none'\''">`)'
 if [ -n "$UMAMI_ID" ]; then
   printf '<script defer src="https://cloud.umami.is/script.js" data-website-id="%s" data-domains="yago-ananias.github.io" data-do-not-track="true"></script>\n' "$UMAMI_ID"
 fi

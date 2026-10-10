@@ -1,0 +1,10 @@
+# Avisa quando as ações dos workflows (fixadas por SHA) têm versão nova. Spec 017.
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly
+    groups:
+      acoes:
+        patterns: ["*"]
