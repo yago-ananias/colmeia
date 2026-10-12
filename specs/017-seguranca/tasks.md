@@ -6,5 +6,5 @@
 - [X] T004 [FR-004] Separar permissões em `metricas.yml` e `site.yml`
 - [X] T005 [FR-005] `SECURITY.md` e `.github/dependabot.yml`
 - [X] T006 Montar o site e rodar `verificar-site.mjs` com a CSP (13/13), e conferir que um script injetado é bloqueado
-- [ ] T007 YAGO cria o secret `UMAMI_SHARE` com um link novo do Umami e desativa o antigo
-- [ ] T008 YAGO dá o "pode enviar"; enviar ao repositório e conferir o CI
+- [X] T007 YAGO cria o secret `UMAMI_SHARE` com um link novo do Umami e desativa o antigo
+- [X] T008 YAGO deu o "pode enviar" (10/10/2026); enviado (39f379e), CI verde; coleta com o secret novo funcionou às 18:20 UTC

@@ -1,5 +1,6 @@
 <!--
 Sync Impact Report
+Version: 1.2.1 → 1.2.2 (2026-10-12, spec 018): PATCH. Princípio II: as extras entram no contador de palavras; ficam fora só da conclusão do desafio e de "Ver respostas".
 Version: 1.2.0 → 1.2.1 (2026-10-04, spec 016, correção da auditoria): PATCH. Princípio V registra a exceção dos dias já publicados (spec 008, FR-007).
 Version: 1.1.0 → 1.2.0 (2026-10-04, auditoria Spec Kit, decisão de YAGO "emendar"): MINOR.
   - Princípios I e II: ganham a camada das palavras extras (spec 011), que pontuam mas ficam fora do que conta como resposta do desafio.
@@ -33,7 +34,7 @@ palavra só entra nela se existir em dicionário e estiver entre as mais usadas 
 Palavras extras: termos técnicos e palavras menos comuns que o dicionário conhece valem como
 "palavra extra" (spec 011). Elas passam pelas mesmas regras do jogo (sem plural, verbo conjugado,
 nome próprio, estrangeirismo, pronome ou palavrão), somam pontos e não entram na lista principal,
-na contagem do desafio nem em "Ver respostas". Palavras estranhas reportadas, da lista principal
+na conclusão do desafio nem em "Ver respostas". Palavras estranhas reportadas, da lista principal
 ou das extras, são removidas.
 
 ### III. Um arquivo, zero servidor
@@ -78,4 +79,4 @@ Esta constituição vale acima de qualquer outra prática do projeto. Mudanças 
 arquivo, subir a versão (MAJOR para remover ou redefinir princípio, MINOR para adicionar, PATCH para
 ajuste de texto) e conferir se specs e planos abertos continuam de acordo.
 
-**Version**: 1.2.1 | **Ratified**: 2026-10-02 | **Last Amended**: 2026-10-04
+**Version**: 1.2.2 | **Ratified**: 2026-10-02 | **Last Amended**: 2026-10-12

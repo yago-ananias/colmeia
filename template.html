@@ -417,9 +417,9 @@ function renderDailies(){
   box.innerHTML="";
   for(let k=0;k<DAILY;k++){
     let label;
-    if(k===S.k)label=`<span class="rk">${rankName()} · </span>${S.found.length}/${P.list.length}`;
-    else{const sv=store.get("d"+S.day+"-"+k,null,FORMATO.progresso),pz=sv&&sv.found.length?buildPuzzle(sv.code||dailyCode(S.day,k)):null,f=pz?sv.found.filter(w=>pz.valid.has(w)):[];
-      if(f.length){const b=f.concat(sv.extra.filter(w=>EXTRAS.has(w))).reduce((a,w)=>a+points(w),0);let r=0;RANKS.forEach((x,i)=>{if(b/pz.max>=x[1])r=i});label=`<span class="rk">${f.length===pz.list.length?"Completa":RANKS[r][0]} · </span>${f.length}/${pz.list.length}`}else label="Novo"}
+    if(k===S.k)label=`<span class="rk">${rankName()} · </span>${nPal()}/${P.list.length}`;
+    else{const sv=store.get("d"+S.day+"-"+k,null,FORMATO.progresso),pz=sv&&(sv.found.length||sv.extra.length)?buildPuzzle(sv.code||dailyCode(S.day,k)):null,f=pz?sv.found.filter(w=>pz.valid.has(w)):[],ex=pz?sv.extra.filter(w=>EXTRAS.has(w)):[];
+      if(f.length||ex.length){const b=f.concat(ex).reduce((a,w)=>a+points(w),0);let r=0;RANKS.forEach((x,i)=>{if(b/pz.max>=x[1])r=i});label=`<span class="rk">${f.length===pz.list.length?"Completa":RANKS[r][0]} · </span>${f.length+ex.length}/${pz.list.length}`}else label="Novo"}
     const b=document.createElement("button");b.setAttribute("aria-pressed",k===S.k);b.innerHTML=`<b>${DNAMES[k]}</b><small>${label}</small>`;
     b.onclick=()=>{if(k!==S.k)start("diario",{k})};box.appendChild(b);
   }
@@ -448,7 +448,7 @@ function endLightning(){
   track("relampago-fim",{pontos:score,palavras:S.found.length,recorde:rec?"sim":"não"});
   sfx("end");
   sheet(`<h2>${rec?"Novo recorde!":"Tempo esgotado"}</h2>
-   <div class="big-num">${score}</div><p class="sub">${base()} pts de palavras + ${S.bonus} de combo · ${S.found.length} palavras${extraTxt()}</p>
+   <div class="big-num">${score}</div><p class="sub">${base()} pts de palavras + ${S.bonus} de combo · ${nPal()} palavras${extraTxt()}</p>
    <p>Recorde: <b>${stats.best}</b> pts</p>
    <p class="sub">Palavras que ficaram de fora: ${P.list.filter(w=>!S.found.includes(w)).slice(0,12).map(disp).join(", ")}${P.list.length-S.found.length>12?"…":""}</p>
    <div class="controls"><button class="btn primary" data-act="again">Jogar de novo</button><button class="btn" data-act="daily">Ir para o diário</button></div>`);
@@ -522,7 +522,8 @@ function giveUp(){
 
 /* ---------- render ---------- */
 function base(){return S.found.concat(S.extra).reduce((s,w)=>s+points(w),0)}
-const extraTxt=()=>S.extra.length?` + ${S.extra.length} extra${S.extra.length>1?"s":""}`:"";
+const nPal=()=>S.found.length+S.extra.length;   // spec 018: o contador soma as extras (a conclusão do desafio continua só com as palavras dele)
+const extraTxt=()=>S.extra.length?` (${S.extra.length} extra${S.extra.length>1?"s":""})`:"";
 function rankIndex(){const f=P.max?base()/P.max:0;let i=0;RANKS.forEach((r,k)=>{if(f>=r[1])i=k});return i}
 function rankName(){return S.found.length===P.list.length?"Colmeia completa":RANKS[rankIndex()][0]}
 function renderAll(newWord){renderDailies();renderEntry();renderRank();renderWords(newWord);renderHints();renderCombo();renderStats();if(S.mode==="relampago")renderTimer()}
@@ -569,7 +570,7 @@ function renderRank(){
 }
 function renderWords(newWord){
   const ul=$("words");
-  $("foundtitle").innerHTML=`${S.found.length} de ${P.list.length} palavras`+(P.pangrams.size?` · ${[...P.pangrams].filter(w=>S.found.includes(w)).length}/${P.pangrams.size} pangrama${P.pangrams.size>1?"s":""}`:"")+(S.extra.length?` · <span class="exn">+${S.extra.length} extra${S.extra.length>1?"s":""}</span>`:"");
+  $("foundtitle").innerHTML=`${nPal()} de ${P.list.length} palavras`+(S.extra.length?` <span class="exn">(${S.extra.length} extra${S.extra.length>1?"s":""})</span>`:"")+(P.pangrams.size?` · ${[...P.pangrams].filter(w=>S.found.includes(w)).length}/${P.pangrams.size} pangrama${P.pangrams.size>1?"s":""}`:"");
   let list=S.found.slice();
   if(S.gaveUp)list=P.list.slice();
   list=list.concat(S.extra).sort((a,b)=>a.localeCompare(b));
@@ -636,7 +637,7 @@ function help(){sheet(`<img class="mark lg-l" src="data:image/svg+xml;base64,PHN
  <li>Acentos e cedilha não importam: digite <i>acao</i> para <i>ação</i>.</li>
  <li><b>Plurais não valem</b> (<i>laranjas</i>). <b>Verbos só no infinitivo</b> (<i>correr</i> vale, <i>correu</i> não). Masculino e feminino valem (<i>aluno</i> e <i>aluna</i>).</li>
  <li>Preposições e conjunções valem (<i>para</i>, <i>porque</i>). Pronomes, nomes próprios, estrangeirismos e palavrões ficam de fora.</li>
- <li><b>Palavras extras:</b> termos técnicos e palavras menos comuns também valem e somam pontos, mas não contam para completar a colmeia nem aparecem nas respostas.</li>
+ <li><b>Palavras extras:</b> termos técnicos e palavras menos comuns também valem, somam pontos e entram no contador de palavras, mas não contam para completar a colmeia nem aparecem nas respostas.</li>
  <li>Palavras de 4 letras valem 1 ponto; as maiores valem 1 ponto por letra. O <b>pangrama</b>, que usa as 7 letras, vale 7 a mais. Palavras com <b>8 letras ou mais</b> ganham +3.</li>
  <li><b>Combo:</b> acertou outra palavra em até 12 segundos? Ela vale em dobro, depois o triplo, até x5.</li>
  <li><b>Diário:</b> três desafios novos por dia (manhã, tarde e noite), iguais para todo mundo. O botão ◐ liga e desliga o modo escuro. <b>Relâmpago:</b> 75 segundos, cada acerto dá mais tempo. <b>Livre:</b> quantos desafios quiser, sem repetir os diários.</li>
@@ -647,11 +648,11 @@ function siteUrl(){try{if(/^https?:$/.test(location.protocol)&&/\.github\.io$/.t
 function shareText(){
   const pg=[...P.pangrams].filter(w=>S.found.includes(w)).length, stars=pg?" "+"⭐".repeat(pg):"", full=S.found.length===P.list.length;
   if(S.mode==="relampago"){const p=base()+S.bonus;
-    return `Colmeia Relâmpago ⚡ ${p} pts\n${S.found.length} palavra${S.found.length===1?"":"s"}${extraTxt()}${stars}\nConsegue mais? ${siteUrl()}?c=${P.code}&m=relampago&p=${p}`}
+    return `Colmeia Relâmpago ⚡ ${p} pts\n${nPal()} palavra${nPal()===1?"":"s"}${extraTxt()}${stars}\nConsegue mais? ${siteUrl()}?c=${P.code}&m=relampago&p=${p}`}
   let g="";const ri=rankIndex();for(let i=1;i<=7;i++)g+=i<=ri?"🟨":i===7&&full?"🍯":"⬜";
   const date=new Date().toLocaleDateString("pt-BR",{day:"2-digit",month:"2-digit"});
   const extra=(S.hintsUsed?` · ${S.hintsUsed} dica${S.hintsUsed>1?"s":""}`:"")+(S.gaveUp?" · respostas vistas":"");
-  return `${S.mode==="diario"?`Colmeia ${date} · ${DNAMES[S.k]}`:"Colmeia Livre"}\n${rankName()} ${g}${stars}\n${S.found.length}/${P.list.length} palavras${extraTxt()} · ${base()} pts${extra}\nJogue este desafio: ${siteUrl()}?c=${P.code}`;
+  return `${S.mode==="diario"?`Colmeia ${date} · ${DNAMES[S.k]}`:"Colmeia Livre"}\n${rankName()} ${g}${stars}\n${nPal()}/${P.list.length} palavras${extraTxt()} · ${base()} pts${extra}\nJogue este desafio: ${siteUrl()}?c=${P.code}`;
 }
 async function share(){
   const txt=shareText();

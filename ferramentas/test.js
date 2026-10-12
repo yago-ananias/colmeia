@@ -180,7 +180,13 @@ const ok = (cond, msg) => { console.log((cond ? "  ok   " : "  FALHOU ") + msg);
     const t1 = await p.$eval("#foundtitle", e => e.textContent), gain = (await pts()) - before;
     const expect = (s11.ex.length === 4 ? 1 : s11.ex.length) + (s11.ex.length >= 8 ? 3 : 0);
     ok(shown.startsWith("Palavra extra! +" + expect) && gain === expect, `extra "${s11.ex}" aceita ("${shown}") e soma ${gain} pontos`);
-    ok((await found()) === n0 + 1 && t1.split(" palavras")[0] === t0.split(" palavras")[0] && /\+1 extra$/.test(t1), `extra entra na lista sem mudar a contagem do desafio ("${t0}" → "${t1}")`);
+    // spec 018: a extra soma no contador de palavras (o "de M" é o tamanho do desafio e não muda)
+    const cont = t => { const m = /^(\d+) de (\d+) palavras/.exec(t); return m ? [+m[1], +m[2]] : [NaN, NaN]; };
+    const [c0, m0] = cont(t0), [c1, m1] = cont(t1);
+    ok((await found()) === n0 + 1 && c1 === c0 + 1 && m1 === m0 && /\(1 extra\)/.test(t1), `extra soma no contador de palavras sem mudar o tamanho do desafio ("${t0}" → "${t1}")`);
+    const aba = await p.$eval("#dailies button[aria-pressed=true] small", e => e.textContent), share = await (async () => { await p.evaluate(() => { window.__copied = null; Object.defineProperty(navigator, "clipboard", { configurable: true, value: { writeText: t => { window.__copied = t; return Promise.resolve(); } } }); }); await p.click("#b-share"); await p.waitForTimeout(150); return p.evaluate(() => window.__copied || ""); })();
+    ok(aba.endsWith(`${c1}/${m1}`) && share.includes(`${c1}/${m1} palavras (1 extra)`), `aba do desafio e resultado compartilhado também somam a extra ("${aba}"; "${share.split("\n")[2]}")`);
+    ok(!(await p.$$eval(".sheet h2", h => h.some(x => /completa/i.test(x.textContent)))), "somar no contador não completa a colmeia");
     ok(await p.$eval("#words li.ex .tag", e => e.textContent).catch(() => "") === "extra", "palavra extra aparece marcada na lista (leitor de tela diz \"extra\")");
     await p.keyboard.type(s11.ex); await p.keyboard.press("Enter"); await p.waitForTimeout(80);
     const again = await p.$eval("#toast span", e => e.textContent);

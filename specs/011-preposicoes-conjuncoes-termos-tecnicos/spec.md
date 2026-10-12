@@ -11,9 +11,9 @@ O jogador digita *para*, *porque*, *quando*, *embora*, *sobre*, *após* ou *por�
 **Acceptance**: preposições e conjunções estão na lista principal; pronomes e contrações com pronome (*eles*, *você*, *isso*, *dele*, *neste*) continuam recusados com "Pronomes não valem".
 
 ## User Story 2 - Termos técnicos valem como palavra extra (P1)
-O jogador digita um termo técnico ou uma palavra menos comum que o dicionário conhece (*sinapse*, *entalpia*, *usucapião*, *bissetriz*) e o jogo aceita como **palavra extra**: "Palavra extra! +N". Ela soma pontos (com combo e, no Relâmpago, tempo), aparece na lista com a etiqueta "extra" e é guardada com o progresso. Não conta para a contagem de palavras do desafio, para "Colmeia completa" nem para "Ver respostas", e não aparece nas dicas.
+O jogador digita um termo técnico ou uma palavra menos comum que o dicionário conhece (*sinapse*, *entalpia*, *usucapião*, *bissetriz*) e o jogo aceita como **palavra extra**: "Palavra extra! +N". Ela soma pontos (com combo e, no Relâmpago, tempo), aparece na lista com a etiqueta "extra" e é guardada com o progresso. Não conta para a contagem de palavras do desafio, para "Colmeia completa" nem para "Ver respostas", e não aparece nas dicas. *(Desde a spec 018 ela conta no contador "N de M palavras"; o resto continua valendo.)*
 
-**Acceptance**: a extra soma os pontos da palavra; a contagem "N de M palavras" não muda e o título mostra "+1 extra"; digitar de novo dá "Já encontrada"; recarregar a página mantém a extra.
+**Acceptance**: a extra soma os pontos da palavra; a contagem "N de M palavras" não muda e o título mostra "+1 extra"; *(substituído pela spec 018: a contagem passa a somar a extra e o título mostra "(1 extra)")*; digitar de novo dá "Já encontrada"; recarregar a página mantém a extra.
 
 ## Requirements
 - **FR-001**: Preposições (ADP) e conjunções (CCONJ, SCONJ) dos treebanks UD contam como palavra comum; pronomes e determinantes continuam de fora.

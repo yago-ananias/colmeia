@@ -21,7 +21,8 @@ Tudo abaixo vem do código do jogo (`template.html`).
 ## Palavras extras (spec 011)
 - Termos técnicos e científicos e palavras menos comuns que o dicionário conhece (*sinapse*, *entalpia*, *usucapião*, *bissetriz*) valem como **palavra extra**. O aviso é "Palavra extra! +N".
 - Somam pontos como qualquer palavra (com bônus e combo) e contam para o nível. No Relâmpago também dão tempo.
-- Não contam para a contagem de palavras do desafio ("N de M palavras"), para "Colmeia completa" nem para os 5 acertos da sequência de dias, e não aparecem nas dicas nem em "Ver respostas".
+- Entram no contador de palavras (spec 018): o título mostra "N de M palavras (K extras)", em que o N soma as extras e o M continua sendo o tamanho do desafio. Por isso o N pode passar do M. A aba do desafio e o resultado compartilhado usam o mesmo número.
+- Não contam para "Colmeia completa" (só as palavras do desafio completam), nem para os 5 acertos da sequência de dias, e não aparecem nas dicas nem em "Ver respostas".
 - Aparecem na lista com a etiqueta "extra", e o título mostra "+N extras". O resultado compartilhado também mostra as extras.
 - Seguem as mesmas regras: sem plural, verbo conjugado, nome próprio, estrangeirismo, nome científico em latim ou palavrão.
 
