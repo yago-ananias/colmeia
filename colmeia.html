@@ -425,7 +425,7 @@ function renderDailies(){
     let label;
     if(k===S.k)label=`<span class="rk">${rankName()} · </span>${nPal()}/${P.list.length}`;
     else{const sv=store.get("d"+S.day+"-"+k,null,FORMATO.progresso),pz=sv&&(sv.found.length||sv.extra.length)?buildPuzzle(sv.code||dailyCode(S.day,k)):null,f=pz?sv.found.filter(w=>pz.valid.has(w)):[],ex=pz?sv.extra.filter(w=>EXTRAS.has(w)):[];
-      if(f.length||ex.length){const b=f.concat(ex).reduce((a,w)=>a+points(w),0);let r=0;RANKS.forEach((x,i)=>{if(b/pz.max>=x[1])r=i});label=`<span class="rk">${f.length===pz.list.length?"Completa":RANKS[r][0]} · </span>${f.length+ex.length}/${pz.list.length}`}else label="Novo"}
+      if(f.length||ex.length){const b=f.concat(ex).reduce((a,w)=>a+points(w),0);let r=0;RANKS.forEach((x,i)=>{if(b/pz.max>=x[1])r=i});label=`<span class="rk">${f.length+ex.length>=pz.list.length?"Completa":RANKS[r][0]} · </span>${f.length+ex.length}/${pz.list.length}`}else label="Novo"}
     const b=document.createElement("button");b.setAttribute("aria-pressed",k===S.k);b.innerHTML=`<b>${DNAMES[k]}</b><small>${label}</small>`;
     b.onclick=()=>{if(k!==S.k)start("diario",{k})};box.appendChild(b);
   }
@@ -474,6 +474,7 @@ function submit(){
   if(S.over)return;
   const w=S.input;if(!w)return;
   if(S.gaveUp){toast("As respostas já foram reveladas neste desafio");S.input="";renderEntry();return}
+  if(completa()){toast("Desafio completo! Escolha outro");S.input="";renderEntry();return}
   let err=null;
   if(w.length<4)err="Muito curta";
   else if(!w.includes(P.center))err="Falta a letra central";
@@ -484,7 +485,7 @@ function submit(){
   const now=performance.now();
   S.combo=(S.last&&now-S.last<COMBO_WINDOW)?Math.min(S.combo+1,5):1;S.last=now;
   const pt=points(w), bonus=pt*(S.combo-1);S.bonus+=bonus;
-  const ex=!P.valid.has(w);   // palavra extra: pontua e dá tempo, mas não conta para completar o desafio
+  const ex=!P.valid.has(w);   // palavra extra: pontua, dá tempo e soma no total que completa o desafio
   if(ex)S.extra.push(w);else S.found.push(w);
   S.input="";
   const pg=!ex&&P.pangrams.has(w);
@@ -500,7 +501,7 @@ function submit(){
     track("nivel",{modo:modeName(),nivel:RANKS[after][0],palavras:S.found.length});
     if(RANKS[after][0]==="Rainha")award("rainha");
     if(after>=5&&S.hintsUsed===0&&!S.gaveUp)award("semdica")}
-  if(!ex&&S.found.length===P.list.length){award("completa");track("completa",{modo:modeName(),palavras:S.found.length});setTimeout(()=>{confetti();sheet(`<h2>Colmeia completa!</h2><p>Você achou todas as ${P.list.length} palavras.</p><div class="controls"><button class="btn primary" data-act="close">Fechar</button></div>`)},900)}
+  if(completa()){award("completa");track("completa",{modo:modeName(),palavras:S.found.length});setTimeout(()=>{confetti();sheet(`<h2>Colmeia completa!</h2><p>${S.extra.length?`Você chegou às ${P.list.length} palavras (${S.extra.length} extra${S.extra.length>1?"s":""}).`:`Você achou todas as ${P.list.length} palavras.`}</p><div class="controls"><button class="btn primary" data-act="close">Fechar</button></div>`)},900)}
 }
 function markStreak(){
   if(stats.lastDay===S.day)return;
@@ -528,10 +529,11 @@ function giveUp(){
 
 /* ---------- render ---------- */
 function base(){return S.found.concat(S.extra).reduce((s,w)=>s+points(w),0)}
-const nPal=()=>S.found.length+S.extra.length;   // spec 018: o contador soma as extras (a conclusão do desafio continua só com as palavras dele)
+const nPal=()=>S.found.length+S.extra.length;   // spec 018: o contador soma as extras
+const completa=()=>nPal()>=P.list.length;   // spec 019: palavras do desafio + extras chegando ao total (ex.: 64 de 64) completam o desafio
 const extraTxt=()=>S.extra.length?` (${S.extra.length} extra${S.extra.length>1?"s":""})`:"";
 function rankIndex(){const f=P.max?base()/P.max:0;let i=0;RANKS.forEach((r,k)=>{if(f>=r[1])i=k});return i}
-function rankName(){return S.found.length===P.list.length?"Colmeia completa":RANKS[rankIndex()][0]}
+function rankName(){return completa()?"Colmeia completa":RANKS[rankIndex()][0]}
 function renderAll(newWord){renderDailies();renderEntry();renderRank();renderWords(newWord);renderHints();renderCombo();renderStats();if(S.mode==="relampago")renderTimer()}
 function renderHive(){
   const wrap=$("hexwrap");wrap.innerHTML="";
@@ -643,7 +645,7 @@ function help(){sheet(`<img class="mark lg-l" src="data:image/svg+xml;base64,PHN
  <li>Acentos e cedilha não importam: digite <i>acao</i> para <i>ação</i>.</li>
  <li><b>Plurais não valem</b> (<i>laranjas</i>). <b>Verbos só no infinitivo</b> (<i>correr</i> vale, <i>correu</i> não). Masculino e feminino valem (<i>aluno</i> e <i>aluna</i>).</li>
  <li>Preposições e conjunções valem (<i>para</i>, <i>porque</i>). Pronomes, nomes próprios, estrangeirismos e palavrões ficam de fora.</li>
- <li><b>Palavras extras:</b> termos técnicos e palavras menos comuns também valem, somam pontos e entram no contador de palavras, mas não contam para completar a colmeia nem aparecem nas respostas.</li>
+ <li><b>Palavras extras:</b> termos técnicos e palavras menos comuns também valem, somam pontos, entram no contador e contam para completar a colmeia (por exemplo, 64 de 64), mas não aparecem nas respostas.</li>
  <li>Palavras de 4 letras valem 1 ponto; as maiores valem 1 ponto por letra. O <b>pangrama</b>, que usa as 7 letras, vale 7 a mais. Palavras com <b>8 letras ou mais</b> ganham +3.</li>
  <li><b>Combo:</b> acertou outra palavra em até 12 segundos? Ela vale em dobro, depois o triplo, até x5.</li>
  <li><b>Diário:</b> três desafios novos por dia (manhã, tarde e noite), iguais para todo mundo. O botão ◐ liga e desliga o modo escuro. <b>Relâmpago:</b> 75 segundos, cada acerto dá mais tempo. <b>Livre:</b> quantos desafios quiser, sem repetir os diários.</li>
@@ -652,7 +654,7 @@ function help(){sheet(`<img class="mark lg-l" src="data:image/svg+xml;base64,PHN
 const SITE="https://yago-ananias.github.io/colmeia/", REPO="https://github.com/yago-ananias/colmeia";
 function siteUrl(){try{if(/^https?:$/.test(location.protocol)&&/\.github\.io$/.test(location.hostname))return location.origin+location.pathname}catch(e){}return SITE}
 function shareText(){
-  const pg=[...P.pangrams].filter(w=>S.found.includes(w)).length, stars=pg?" "+"⭐".repeat(pg):"", full=S.found.length===P.list.length;
+  const pg=[...P.pangrams].filter(w=>S.found.includes(w)).length, stars=pg?" "+"⭐".repeat(pg):"", full=completa();
   if(S.mode==="relampago"){const p=base()+S.bonus;
     return `Colmeia Relâmpago ⚡ ${p} pts\n${nPal()} palavra${nPal()===1?"":"s"}${extraTxt()}${stars}\nConsegue mais? ${siteUrl()}?c=${P.code}&m=relampago&p=${p}`}
   let g="";const ri=rankIndex();for(let i=1;i<=7;i++)g+=i<=ri?"🟨":i===7&&full?"🍯":"⬜";

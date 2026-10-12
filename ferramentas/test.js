@@ -297,6 +297,27 @@ const ok = (cond, msg) => { console.log((cond ? "  ok   " : "  FALHOU ") + msg);
       await pg.route(/fonts\.(googleapis|gstatic)\.com/, r => r.abort()); await pg.goto(url); await pg.waitForTimeout(300);
       return { c, pg };
     };
+    // spec 019: palavras do desafio + extras chegando ao total (N de N) completam o desafio, e o contador não passa disso
+    {
+      const L = day.words[0], M = L.length, code = day.codes[0];
+      const exs = await p.evaluate(c => { const W = new Set(WORDS); return EXTRA.filter(w => w.length >= 4 && w.includes(c[0]) && [...w].every(ch => c.includes(ch)) && !W.has(w)).slice(0, 2); }, code);
+      if (exs.length === 2 && M > 6) {
+        const { c, pg } = await abrir("light", { width: 420, height: 800 }, { "colmeia:seenHelp": "true",
+          ["colmeia:d" + hoje + "-0"]: JSON.stringify({ code, found: L.slice(0, M - 2), extra: [exs[0]], clues: [], hintsUsed: 0 }) });
+        await pg.click("#dailies button:first-child"); await pg.waitForTimeout(200);
+        const titulo = () => pg.$eval("#foundtitle", e => e.textContent), folha = () => pg.$$eval(".sheet h2", h => h.map(x => x.textContent).join("|"));
+        const t0 = await titulo(), sem = !/completa/i.test(await folha());
+        await pg.keyboard.type(exs[1]); await pg.keyboard.press("Enter"); await pg.waitForTimeout(1200);
+        const t1 = await titulo(), f1 = await folha();
+        ok(sem && t0.startsWith(`${M - 1} de ${M} palavras`) && t1.startsWith(`${M} de ${M} palavras (2 extras)`) && /completa/i.test(f1),
+          `extras completam o desafio ao chegar a ${M} de ${M} ("${t0}" → "${t1}"; ${f1})`);
+        await pg.keyboard.press("Escape"); await pg.waitForTimeout(150);
+        await pg.keyboard.type(L[M - 2]); await pg.keyboard.press("Enter"); await pg.waitForTimeout(300);
+        const t2 = await titulo(), aviso = await pg.$eval("#toast span", e => e.textContent).catch(() => "");
+        ok(t2.startsWith(`${M} de ${M} palavras`) && /completo/i.test(aviso), `depois de completo o contador não passa de ${M} ("${t2}"; "${aviso}")`);
+        await c.close();
+      } else ok(true, "sem duas extras para o desafio de Manhã neste dia (teste do total pulado)");
+    }
     // contraste entre uma propriedade de cor de um elemento e o fundo de outro (cores já resolvidas pelo navegador)
     const razao = (pg, sel, prop, fsel, fprop = "backgroundColor") => pg.evaluate(([sel, prop, fsel, fprop]) => {
       const rgb = s => (s.match(/[\d.]+/g) || []).slice(0, 3).map(Number);

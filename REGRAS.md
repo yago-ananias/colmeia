@@ -21,8 +21,8 @@ Tudo abaixo vem do código do jogo (`template.html`).
 ## Palavras extras (spec 011)
 - Termos técnicos e científicos e palavras menos comuns que o dicionário conhece (*sinapse*, *entalpia*, *usucapião*, *bissetriz*) valem como **palavra extra**. O aviso é "Palavra extra! +N".
 - Somam pontos como qualquer palavra (com bônus e combo) e contam para o nível. No Relâmpago também dão tempo.
-- Entram no contador de palavras (spec 018): o título mostra "N de M palavras (K extras)", em que o N soma as extras e o M continua sendo o tamanho do desafio. Por isso o N pode passar do M. A aba do desafio e o resultado compartilhado usam o mesmo número.
-- Não contam para "Colmeia completa" (só as palavras do desafio completam), nem para os 5 acertos da sequência de dias, e não aparecem nas dicas nem em "Ver respostas".
+- Entram no contador de palavras (spec 018): o título mostra "N de M palavras (K extras)", em que o N soma as palavras do desafio e as extras e o M é o tamanho do desafio. A aba do desafio e o resultado compartilhado usam o mesmo número.
+- Contam para completar o desafio (spec 019): quando as palavras do desafio mais as extras chegam a M (por exemplo, 64 de 64), a colmeia está completa e o jogo não aceita mais palavras, então o N nunca passa do M. Não contam para os 5 acertos da sequência de dias e não aparecem nas dicas nem em "Ver respostas".
 - Aparecem na lista com a etiqueta "extra", e o título mostra "+N extras". O resultado compartilhado também mostra as extras.
 - Seguem as mesmas regras: sem plural, verbo conjugado, nome próprio, estrangeirismo, nome científico em latim ou palavrão.
 
@@ -55,7 +55,7 @@ O nível é calculado só com os pontos das palavras (as extras contam), como fr
 | Exploradora | 25% |
 | Guardiã | 40% |
 | Rainha | 60% |
-| Colmeia completa | todas as palavras |
+| Colmeia completa | palavras do desafio + extras chegam ao total do desafio (N de N) |
 
 ## Modos
 - **Diário:** três desafios por dia (Manhã, Tarde e Noite), iguais para todo mundo e liberados à meia-noite pelo horário do aparelho. Cada um guarda seu progresso.
